@@ -1,23 +1,26 @@
-#dependências
+# Pacotes instalados
 node_modules/
 
-#variáveis de ambiente e segredos
+# Segredos e configurações locais
 .env
 .env.*
 !.env.example
 
-#arquivos compilados
+# Arquivos gerados
 dist/
+src/generated/prisma/
 
-#logs
+# Dados locais
+data/
+
+# Logs e arquivos do sistema
 *.log
 npm-debug.log*
-
-#arquivos do sistema
 .DS_Store
 Thumbs.db
 
-#arquivos auxiliares de ferramentas
+# Arquivos auxiliares de editores
+.vscode/
 .agents/
 .claude/
 .windsurf/
