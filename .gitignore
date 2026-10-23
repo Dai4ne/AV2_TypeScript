@@ -1,0 +1,24 @@
+#dependências
+node_modules/
+
+#variáveis de ambiente e segredos
+.env
+.env.*
+!.env.example
+
+#arquivos compilados
+dist/
+
+#logs
+*.log
+npm-debug.log*
+
+#arquivos do sistema
+.DS_Store
+Thumbs.db
+
+#arquivos auxiliares de ferramentas
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
