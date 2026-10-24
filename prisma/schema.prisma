@@ -62,6 +62,7 @@ model Usuario {
   ultimoAcesso DateTime?
   papel        PapelUsuario
   criadoEm     DateTime     @default(now())
+  ativo        Boolean      @default(true)
 }
 
 model Organizacao {
@@ -97,6 +98,7 @@ model Lote {
   transportadora      String
   statusProcessamento StatusLote   @default(RECEBIDO)
   observacoes         String       @default("")
+  ativo               Boolean      @default(true)
   organizacao         Organizacao @relation(fields: [organizacaoId], references: [id], onDelete: Restrict)
   equipamentos        Equipamento[]
 
@@ -116,6 +118,7 @@ model Equipamento {
   loteId              String
   posicaoNoLote       Int
   statusRastreamento  StatusRastreamento @default(AGUARDANDO_TRIAGEM)
+  ativo               Boolean            @default(true)
   lote                Lote               @relation(fields: [loteId], references: [id], onDelete: Restrict)
   movimentacoes       Movimentacao[]
 

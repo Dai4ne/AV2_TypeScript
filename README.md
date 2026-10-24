@@ -1,63 +1,63 @@
 # GreenCode — AV2
 
-Continuação do GreenCode da AV1. Esta etapa migra a aplicação de terminal para um servidor monolítico com API REST, Fastify, Prisma e PostgreSQL.
+API REST da continuação do GreenCode da AV1, feita com TypeScript, Fastify, Prisma e PostgreSQL.
 
-## Base preparada
+## Preparar pela primeira vez
 
-- Fastify em TypeScript.
-- Rota GET /health que consulta o banco.
-- Documentação inicial em /docs.
-- Plugin JWT registrado para as próximas rotas autenticadas.
-- Schema Prisma com usuário, organização, contrato, lote, equipamento e movimentação.
-- Pastas iniciais para controllers, serviços, repositórios, plugins e testes.
+1. Instale as dependências:
 
-## Requisitos
+       npm install
 
-- Node.js 20.19 ou superior.
-- PostgreSQL instalado e iniciado.
-- npm.
-
-## Preparar o ambiente
-
-1. Instale os pacotes: npm install
-2. Copie .env.example para .env.
-3. Ajuste DATABASE_URL com usuário, senha e banco do PostgreSQL local.
-4. Troque JWT_SECRET por uma chave longa própria.
-5. Crie no PostgreSQL o banco greencode (ou use o nome na URL).
-6. Gere o Prisma Client e valide o schema:
-
-       npm run db:generate
-       npm run db:validate
-
-7. Crie as tabelas da primeira migração:
+2. Copie `.env.example` para `.env`.
+3. No `.env`, informe a conexão do PostgreSQL em `DATABASE_URL` e escolha uma chave longa para `JWT_SECRET`.
+4. Defina `ADMIN_USER` e `ADMIN_PASSWORD`. Eles serão usados para criar o primeiro administrador; troque os valores de exemplo.
+5. Crie o banco `greencode` no PostgreSQL, se ainda não existir.
+6. Crie/aplique as tabelas e gere o Prisma Client:
 
        npm run db:migrate -- --name inicial
 
-## Executar
+   O comando de migração também gera o Prisma Client. Se você alterar `prisma/schema.prisma` depois, rode `npm run db:generate`.
+
+7. Crie o administrador inicial:
+
+       npm run db:seed
+
+O seed não imprime nem salva a senha em texto puro. A senha é protegida com hash e salt, seguindo o formato da AV1.
+
+## Iniciar e testar pela documentação
+
+Inicie o servidor:
 
        npm run dev
 
-Acesse http://127.0.0.1:3000/health para verificar API e banco. Consulte http://127.0.0.1:3000/docs para a documentação disponível.
+Abra <http://localhost:3000/docs>. Faça `POST /auth/login` com `ADMIN_USER` e `ADMIN_PASSWORD`. Copie o token retornado, clique em **Authorize** e cole somente o token. A API o envia como `Bearer` nas próximas requisições. O token expira em 30 minutos.
 
-## Scripts
+`GET /health` verifica a conexão com o banco. O Swagger lista as demais rotas e os campos aceitos.
 
-- npm run dev: inicia o servidor em modo de desenvolvimento.
-- npm run build: gera o Prisma Client e compila TypeScript em dist.
-- npm start: inicia a versão compilada.
-- npm run db:generate: gera os tipos e métodos do Prisma Client.
-- npm run db:validate: verifica o schema Prisma.
-- npm run db:format: organiza o schema Prisma.
-- npm run db:migrate -- --name nome: cria ou aplica uma migração local.
-- npm run db:studio: abre uma interface visual para o banco.
+## Operações disponíveis
 
-## Próximas etapas
+- **Usuários:** cadastrar, consultar, listar, alterar nome/papel, inativar e reativar. A própria pessoa pode trocar a senha; administrador pode redefinir senhas e gerenciar contas.
+- **Organizações:** cadastrar, consultar, listar, atualizar CNPJ e dados, inativar e reativar. A inativação também inativa lotes e equipamentos vinculados.
+- **Contratos:** cadastrar, consultar, listar, atualizar e excluir definitivamente. Cada organização pode ter no máximo um contrato.
+- **Lotes:** cadastrar, consultar com equipamentos, listar, atualizar, inativar e alterar manualmente o status. Só é permitido cadastrar lote para organização ativa com contrato vigente. Inativar lote também inativa os equipamentos.
+- **Equipamentos:** cadastrar, consultar, listar, atualizar, alterar status e excluir definitivamente. O ID do equipamento também é seu código de barras. A exclusão definitiva remove suas movimentações vinculadas.
+- **Movimentações:** registrar e consultar no histórico do equipamento. O histórico é somente de acréscimo para preservar os registros.
 
-1. Implementar login e emissão/verificação de JWT.
-2. Criar repositórios e serviços para os modelos.
-3. Criar controllers e rotas REST com validação.
-4. Usar transações nas operações relacionadas.
-5. Preparar seed e migração dos dados da AV1.
-6. Adicionar testes para regras, permissões, rotas e transações.
-7. Completar a documentação e verificar Windows e Ubuntu.
+O papel `ADMINISTRADOR` tem acesso a todas as rotas. Os outros papéis seguem as permissões da AV1: operador de cadastro gerencia organizações/contratos; gestor de almoxarifado gerencia lotes/equipamentos; auditor consulta rastreamento e movimentações.
 
-A pasta data da AV1 não é migrada automaticamente. A transferência dos registros será planejada separadamente para preservar seus dados e relações.
+## Regra de status do lote definida para a AV2
+
+O responsável altera manualmente os status `RECEBIDO`, `EM_TRIAGEM`, `ENCAMINHADO` e `FINALIZADO`. `TRIAGEM_CONCLUIDA` é atribuído automaticamente quando todos os equipamentos ativos do lote chegam a `BAIXA_DEFINITIVA`.
+
+## Comandos úteis
+
+- `npm run build`: compila o TypeScript para a pasta `dist`.
+- `npm run db:generate`: gera novamente o Prisma Client depois de mudanças no schema.
+- `npm run db:validate`: valida o schema Prisma.
+- `npm run db:format`: formata o schema Prisma.
+- `npm run db:studio`: abre a interface visual das tabelas.
+- `npm run db:seed`: cria o primeiro administrador, se ainda não houver um ativo.
+
+## Observações
+
+Os dados existentes na pasta `data` da AV1 não são importados automaticamente para o PostgreSQL. Essa migração precisa ser planejada para preservar IDs e relações.
