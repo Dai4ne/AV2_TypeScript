@@ -70,6 +70,17 @@ O responsável altera manualmente os status `RECEBIDO`, `EM_TRIAGEM`, `ENCAMINHA
 - `npm run db:studio`: abre a interface visual das tabelas.
 - `npm run db:seed`: cria o administrador inicial, se necessário, e insere ou atualiza os dados de exemplo `DEMO-`.
 
+## Evitar alterações simultâneas com dados desatualizados
+
+Organizações, contratos, lotes e equipamentos têm o campo `versao`, iniciado em `1`. As consultas devolvem esse número. Ao atualizar, alterar status, inativar, reativar ou excluir, envie a versão que recebeu na consulta ou na resposta da operação anterior. Ao cadastrar equipamento, envie `versaoLote` com a versão atual do lote. Se outra requisição já alterou o registro, a API responde `409 Conflict`; consulte o registro de novo e reaplique a mudança sobre os dados atuais.
+
+- `PUT` e alterações de status/reativação recebem `versao` no JSON.
+- `DELETE` recebe `?versao=NUMERO` na URL.
+- `POST /equipamentos` recebe `versaoLote` junto com o `loteId`.
+- Inativação/reativação em cadeia também aumenta a versão dos lotes/equipamentos afetados.
+
+Exemplo: se `GET /lotes/LOTE-01` retorna `"versao": 3`, envie `"versao": 3` no JSON do `PUT /lotes/LOTE-01`. Se outra alteração já ocorreu, o retorno `409` indica que é preciso consultar o lote novamente.
+
 ## Observações
 
 Os dados da AV1 não são importados. A AV2 começa com dados fictícios criados pelo seed.

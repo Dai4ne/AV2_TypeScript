@@ -4,9 +4,10 @@ import { ErroLote, loteService } from "../services/lote.service.js";
 
 type Params = { id: string };
 type CriarBody = { id: string; dataEntrada: string; organizacaoId: string; notaFiscal: string; transportadora: string; observacoes?: string };
-type AtualizarBody = Omit<CriarBody, "id"> & { observacoes: string };
-type StatusBody = { status: StatusLote };
+type AtualizarBody = Omit<CriarBody, "id"> & { observacoes: string; versao: number };
+type StatusBody = { versao: number; status: StatusLote };
 type PeriodoQuery = { dataInicio: string; dataFim: string };
+type VersaoQuery = { versao: number };
 
 // Encaminha requisições HTTP às regras de lote.
 export const loteController = {
@@ -20,14 +21,15 @@ export const loteController = {
         return responder(reply, () => loteService.criar(dados), 201);
     },
     async atualizar(request: FastifyRequest<{ Params: Params; Body: AtualizarBody }>, reply: FastifyReply) {
-        const dados = { ...request.body, dataEntrada: new Date(request.body.dataEntrada) };
-        return responder(reply, () => loteService.atualizar(request.params.id, dados));
+        const { versao, ...corpo } = request.body;
+        const dados = { ...corpo, dataEntrada: new Date(corpo.dataEntrada) };
+        return responder(reply, () => loteService.atualizar(request.params.id, versao, dados));
     },
     async atualizarStatus(request: FastifyRequest<{ Params: Params; Body: StatusBody }>, reply: FastifyReply) {
-        return responder(reply, () => loteService.atualizarStatus(request.params.id, request.body.status));
+        return responder(reply, () => loteService.atualizarStatus(request.params.id, request.body.versao, request.body.status));
     },
-    async inativar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => loteService.inativar(request.params.id)); },
-    async ativar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => loteService.ativar(request.params.id)); },
+    async inativar(request: FastifyRequest<{ Params: Params; Querystring: VersaoQuery }>, reply: FastifyReply) { return responder(reply, () => loteService.inativar(request.params.id, request.query.versao)); },
+    async ativar(request: FastifyRequest<{ Params: Params; Body: { versao: number } }>, reply: FastifyReply) { return responder(reply, () => loteService.ativar(request.params.id, request.body.versao)); },
 };
 
 async function responder(reply: FastifyReply, acao: () => Promise<unknown>, status = 200) {

@@ -10,7 +10,8 @@ type CriarBody = {
     valorMensal: number;
     renovacaoAutomatica: boolean;
 };
-type AtualizarBody = Omit<CriarBody, "organizacaoId">;
+type AtualizarBody = Omit<CriarBody, "organizacaoId"> & { versao: number };
+type VersaoQuery = { versao: number };
 
 // Encaminha as requisições HTTP para o serviço de contratos.
 export const contratoController = {
@@ -29,15 +30,16 @@ export const contratoController = {
         return responder(reply, () => contratoService.criar(dados), 201);
     },
     async atualizar(request: FastifyRequest<{ Params: IdParams; Body: AtualizarBody }>, reply: FastifyReply) {
+        const { versao, ...corpo } = request.body;
         const dados = {
-            ...request.body,
-            dataAssinatura: new Date(request.body.dataAssinatura),
-            dataVencimento: new Date(request.body.dataVencimento),
+            ...corpo,
+            dataAssinatura: new Date(corpo.dataAssinatura),
+            dataVencimento: new Date(corpo.dataVencimento),
         };
-        return responder(reply, () => contratoService.atualizar(request.params.id, dados));
+        return responder(reply, () => contratoService.atualizar(request.params.id, versao, dados));
     },
-    async excluir(request: FastifyRequest<{ Params: IdParams }>, reply: FastifyReply) {
-        return responder(reply, () => contratoService.excluir(request.params.id));
+    async excluir(request: FastifyRequest<{ Params: IdParams; Querystring: VersaoQuery }>, reply: FastifyReply) {
+        return responder(reply, () => contratoService.excluir(request.params.id, request.query.versao));
     },
 };
 

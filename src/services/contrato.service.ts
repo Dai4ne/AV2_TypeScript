@@ -41,14 +41,18 @@ export const contratoService = {
             throw erro;
         }
     },
-    async atualizar(id: string, dados: DadosEdicao) {
+    async atualizar(id: string, versao: number, dados: DadosEdicao) {
         await this.buscar(id);
         validarDados(dados);
-        return contratoRepository.atualizar(id, dados);
+        const resultado = await contratoRepository.atualizar(id, versao, dados);
+        if (!resultado) throw new ErroContrato(409, "O contrato foi alterado por outra requisição. Consulte os dados novamente.");
+        return resultado;
     },
-    async excluir(id: string) {
+    async excluir(id: string, versao: number) {
         await this.buscar(id);
-        return contratoRepository.excluir(id);
+        const excluido = await contratoRepository.excluir(id, versao);
+        if (!excluido) throw new ErroContrato(409, "O contrato foi alterado por outra requisição. Consulte os dados novamente.");
+        return { mensagem: "Contrato excluído." };
     },
 };
 

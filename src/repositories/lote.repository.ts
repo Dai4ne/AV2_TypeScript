@@ -26,24 +26,29 @@ export const loteRepository = {
     criar(dados: { id: string; dataEntrada: Date; organizacaoId: string; notaFiscal: string; transportadora: string; observacoes: string }) {
         return prisma.lote.create({ data: dados });
     },
-    atualizarStatus(id: string, status: import("@prisma/client").StatusLote) {
-        return prisma.lote.update({ where: { id }, data: { statusProcessamento: status } });
+    async atualizarStatus(id: string, versao: number, status: import("@prisma/client").StatusLote) {
+        const resultado = await prisma.lote.updateMany({ where: { id, ativo: true, versao }, data: { statusProcessamento: status, versao: { increment: 1 } } });
+        return resultado.count ? prisma.lote.findUnique({ where: { id } }) : null;
     },
-    atualizar(id: string, dados: { organizacaoId: string; dataEntrada: Date; notaFiscal: string; transportadora: string; observacoes: string }) {
-        return prisma.lote.update({ where: { id }, data: dados });
+    async atualizar(id: string, versao: number, dados: { organizacaoId: string; dataEntrada: Date; notaFiscal: string; transportadora: string; observacoes: string }) {
+        const resultado = await prisma.lote.updateMany({ where: { id, ativo: true, versao }, data: { ...dados, versao: { increment: 1 } } });
+        return resultado.count ? prisma.lote.findUnique({ where: { id } }) : null;
     },
-    async inativarEmCadeia(id: string) {
+    async inativarEmCadeia(id: string, versao: number) {
         // Mantém os equipamentos do lote, mas os marca como inativos.
         return prisma.$transaction(async (tx) => {
-            await tx.equipamento.updateMany({ where: { loteId: id }, data: { ativo: false } });
-            return tx.lote.update({ where: { id }, data: { ativo: false } });
+            const resultado = await tx.lote.updateMany({ where: { id, ativo: true, versao }, data: { ativo: false, versao: { increment: 1 } } });
+            if (!resultado.count) return null;
+            await tx.equipamento.updateMany({ where: { loteId: id }, data: { ativo: false, versao: { increment: 1 } } });
+            return tx.lote.findUnique({ where: { id } });
         });
     },
-    async ativarEmCadeia(id: string) {
+    async ativarEmCadeia(id: string, versao: number) {
         // Reativa o lote e seus equipamentos na mesma transação.
         return prisma.$transaction(async (tx) => {
-            await tx.lote.update({ where: { id }, data: { ativo: true } });
-            await tx.equipamento.updateMany({ where: { loteId: id }, data: { ativo: true } });
+            const resultado = await tx.lote.updateMany({ where: { id, ativo: false, versao }, data: { ativo: true, versao: { increment: 1 } } });
+            if (!resultado.count) return null;
+            await tx.equipamento.updateMany({ where: { loteId: id }, data: { ativo: true, versao: { increment: 1 } } });
             return tx.lote.findUniqueOrThrow({ where: { id }, include: { equipamentos: { where: { ativo: true } } } });
         });
     },

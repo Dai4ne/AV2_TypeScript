@@ -26,23 +26,34 @@ export const organizacaoService = {
             throw erro;
         }
     },
-    async atualizar(id: string, dados: { razaoSocial: string; cnpj: string; inscricaoEstadual: string; enderecoCompleto: string; telefone: string; email: string }) {
+    async atualizar(id: string, versao: number, dados: { razaoSocial: string; cnpj: string; inscricaoEstadual: string; enderecoCompleto: string; telefone: string; email: string }) {
         await this.buscar(id);
         dados.email = validarEmail(dados.email);
         if (await organizacaoRepository.buscarPorEmail(dados.email, id)) throw new ErroOrganizacao(409, "Esse e-mail já está cadastrado em outra organização.");
         if (!validarCnpj(dados.cnpj)) throw new ErroOrganizacao(400, "CNPJ inválido.");
         dados.cnpj = dados.cnpj.replace(/\D/g, "");
-        try { return await organizacaoRepository.atualizar(id, dados); }
+        try {
+            const atualizada = await organizacaoRepository.atualizar(id, versao, dados);
+            if (!atualizada) throw new ErroOrganizacao(409, "A organização foi alterada por outra requisição. Consulte os dados novamente.");
+            return atualizada;
+        }
         catch (erro) {
             if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") throw new ErroOrganizacao(409, "Esse CNPJ ou e-mail já está cadastrado.");
             throw erro;
         }
     },
-    async inativar(id: string) { await this.buscar(id); return organizacaoRepository.inativarEmCadeia(id); },
-    async ativar(id: string) {
+    async inativar(id: string, versao: number) {
+        await this.buscar(id);
+        const resultado = await organizacaoRepository.inativarEmCadeia(id, versao);
+        if (!resultado) throw new ErroOrganizacao(409, "A organização foi alterada por outra requisição. Consulte os dados novamente.");
+        return resultado;
+    },
+    async ativar(id: string, versao: number) {
         const organizacao = await organizacaoRepository.buscarPorId(id);
         if (!organizacao) throw new ErroOrganizacao(404, "Organização não encontrada.");
-        return organizacaoRepository.ativarEmCadeia(id);
+        const resultado = await organizacaoRepository.ativarEmCadeia(id, versao);
+        if (!resultado) throw new ErroOrganizacao(409, "A organização foi alterada por outra requisição. Consulte os dados novamente.");
+        return resultado;
     },
 };
 

@@ -21,17 +21,19 @@ export const contratoRepository = {
     }) {
         return prisma.contrato.create({ data: { ...dados, clausulas: dados.clausulas } });
     },
-    atualizar(id: string, dados: {
+    async atualizar(id: string, versao: number, dados: {
         dataAssinatura: Date;
         dataVencimento: Date;
         clausulas: string[];
         valorMensal: number;
         renovacaoAutomatica: boolean;
     }) {
-        return prisma.contrato.update({ where: { id }, data: dados });
+        const resultado = await prisma.contrato.updateMany({ where: { id, versao }, data: { ...dados, versao: { increment: 1 } } });
+        return resultado.count ? prisma.contrato.findUnique({ where: { id } }) : null;
     },
-    excluir(id: string) {
+    async excluir(id: string, versao: number) {
         // Contratos são removidos definitivamente conforme a regra do professor.
-        return prisma.contrato.delete({ where: { id } });
+        const resultado = await prisma.contrato.deleteMany({ where: { id, versao } });
+        return resultado.count > 0;
     },
 };

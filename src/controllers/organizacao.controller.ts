@@ -3,16 +3,20 @@ import { ErroOrganizacao, organizacaoService } from "../services/organizacao.ser
 
 type Params = { id: string };
 type Dados = { id: string; razaoSocial: string; cnpj: string; inscricaoEstadual: string; enderecoCompleto: string; telefone: string; email: string };
-type Editar = Omit<Dados, "id">;
+type Editar = Omit<Dados, "id"> & { versao: number };
+type VersaoQuery = { versao: number };
 
 // Converte requisições de organização em chamadas ao serviço.
 export const organizacaoController = {
     async listar(_request: FastifyRequest, reply: FastifyReply) { return reply.send(await organizacaoService.listar()); },
     async buscar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => organizacaoService.buscar(request.params.id)); },
     async criar(request: FastifyRequest<{ Body: Dados }>, reply: FastifyReply) { return responder(reply, () => organizacaoService.criar(request.body), 201); },
-    async atualizar(request: FastifyRequest<{ Params: Params; Body: Editar }>, reply: FastifyReply) { return responder(reply, () => organizacaoService.atualizar(request.params.id, request.body)); },
-    async inativar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => organizacaoService.inativar(request.params.id)); },
-    async ativar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => organizacaoService.ativar(request.params.id)); },
+    async atualizar(request: FastifyRequest<{ Params: Params; Body: Editar }>, reply: FastifyReply) {
+        const { versao, ...dados } = request.body;
+        return responder(reply, () => organizacaoService.atualizar(request.params.id, versao, dados));
+    },
+    async inativar(request: FastifyRequest<{ Params: Params; Querystring: VersaoQuery }>, reply: FastifyReply) { return responder(reply, () => organizacaoService.inativar(request.params.id, request.query.versao)); },
+    async ativar(request: FastifyRequest<{ Params: Params; Body: { versao: number } }>, reply: FastifyReply) { return responder(reply, () => organizacaoService.ativar(request.params.id, request.body.versao)); },
 };
 
 async function responder(reply: FastifyReply, acao: () => Promise<unknown>, status = 200) {

@@ -30,13 +30,15 @@ export const loteService = {
             throw erro;
         }
     },
-    async atualizar(id: string, dados: EdicaoLote) {
+    async atualizar(id: string, versao: number, dados: EdicaoLote) {
         const lote = await this.buscar(id);
         if (dados.organizacaoId !== lote.organizacaoId) await validarOrganizacaoComContrato(dados.organizacaoId);
         validarDadosLote(dados);
-        return loteRepository.atualizar(id, dados);
+        const resultado = await loteRepository.atualizar(id, versao, dados);
+        if (!resultado) throw new ErroLote(409, "O lote foi alterado por outra requisição. Consulte os dados novamente.");
+        return resultado;
     },
-    async atualizarStatus(id: string, status: StatusLote) {
+    async atualizarStatus(id: string, versao: number, status: StatusLote) {
         const lote = await this.buscar(id);
         if (status === "TRIAGEM_CONCLUIDA") throw new ErroLote(400, "TRIAGEM_CONCLUIDA é definido automaticamente pelo sistema.");
         const equipamentosAtivos = lote.equipamentos;
@@ -45,14 +47,23 @@ export const loteService = {
         if (todosComBaixaDefinitiva) {
             throw new ErroLote(409, "O lote está com TRIAGEM_CONCLUIDA porque todos os equipamentos chegaram à baixa definitiva.");
         }
-        return loteRepository.atualizarStatus(id, status);
+        const resultado = await loteRepository.atualizarStatus(id, versao, status);
+        if (!resultado) throw new ErroLote(409, "O lote foi alterado por outra requisição. Consulte os dados novamente.");
+        return resultado;
     },
-    async inativar(id: string) { await this.buscar(id); return loteRepository.inativarEmCadeia(id); },
-    async ativar(id: string) {
+    async inativar(id: string, versao: number) {
+        await this.buscar(id);
+        const resultado = await loteRepository.inativarEmCadeia(id, versao);
+        if (!resultado) throw new ErroLote(409, "O lote foi alterado por outra requisição. Consulte os dados novamente.");
+        return resultado;
+    },
+    async ativar(id: string, versao: number) {
         const lote = await loteRepository.buscarParaAtivar(id);
         if (!lote) throw new ErroLote(404, "Lote não encontrado.");
         if (!lote.organizacao.ativo) throw new ErroLote(409, "Reative a organização antes de reativar o lote.");
-        return loteRepository.ativarEmCadeia(id);
+        const resultado = await loteRepository.ativarEmCadeia(id, versao);
+        if (!resultado) throw new ErroLote(409, "O lote foi alterado por outra requisição. Consulte os dados novamente.");
+        return resultado;
     },
 };
 

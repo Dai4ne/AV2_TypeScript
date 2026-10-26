@@ -13,8 +13,9 @@ export async function registrarRotasEquipamento(app: FastifyInstance): Promise<v
         anoFabricacao: { type: "integer", minimum: 1900 }, estadoFisico: { type: "string", enum: estados },
         pesoQuilogramas: { type: "number", exclusiveMinimum: 0 },
     } as const;
-    const criar = { type: "object", additionalProperties: false, required: ["id", "loteId", ...Object.keys(campos)], properties: { id: { type: "string", minLength: 1 }, loteId: { type: "string", minLength: 1 }, ...campos } } as const;
-    const atualizar = { type: "object", additionalProperties: false, required: Object.keys(campos), properties: { ...campos, justificativa: { type: "string" } } } as const;
+    const criar = { type: "object", additionalProperties: false, required: ["id", "loteId", "versaoLote", ...Object.keys(campos)], properties: { id: { type: "string", minLength: 1 }, loteId: { type: "string", minLength: 1 }, versaoLote: { type: "integer", minimum: 1, description: "Versão atual do lote consultado." }, ...campos } } as const;
+    const atualizar = { type: "object", additionalProperties: false, required: ["versao", ...Object.keys(campos)], properties: { versao: { type: "integer", minimum: 1 }, ...campos, justificativa: { type: "string" } } } as const;
+    const versaoQuery = { type: "object", additionalProperties: false, required: ["versao"], properties: { versao: { type: "integer", minimum: 1 } } } as const;
     const gestor = { preHandler: [autenticar, exigirPapeis("GESTOR_ALMOXARIFADO")] };
     const leitor = { preHandler: [autenticar, exigirPapeis("GESTOR_ALMOXARIFADO", "AUDITOR")] };
 
@@ -25,10 +26,10 @@ export async function registrarRotasEquipamento(app: FastifyInstance): Promise<v
     app.patch("/equipamentos/:id/status", {
         ...gestor,
         schema: { summary: "Atualiza status, registra movimentação e recalcula o lote", params, body: {
-            type: "object", additionalProperties: false, required: ["status"], properties: { status: { type: "string", enum: status } },
+            type: "object", additionalProperties: false, required: ["versao", "status"], properties: { versao: { type: "integer", minimum: 1 }, status: { type: "string", enum: status } },
         }, tags: ["equipamentos"] },
     }, equipamentoController.atualizarStatus as any);
-    app.delete("/equipamentos/:id", { ...gestor, schema: { summary: "Exclui equipamento e histórico definitivamente", params, tags: ["equipamentos"] } }, equipamentoController.excluir as any);
+    app.delete("/equipamentos/:id", { ...gestor, schema: { summary: "Exclui equipamento e histórico definitivamente", params, querystring: versaoQuery, tags: ["equipamentos"] } }, equipamentoController.excluir as any);
     app.get("/equipamentos/:id/movimentacoes", { ...leitor, schema: { summary: "Lista movimentações", params, tags: ["movimentações"] } }, equipamentoController.listarMovimentacoes as any);
     app.post("/equipamentos/:id/movimentacoes", {
         ...gestor,

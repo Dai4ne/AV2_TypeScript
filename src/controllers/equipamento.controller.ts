@@ -3,10 +3,11 @@ import type { EstadoFisico, StatusRastreamento, TipoEquipamento } from "@prisma/
 import { equipamentoService, ErroEquipamento } from "../services/equipamento.service.js";
 
 type Params = { id: string };
-type CriarBody = { id: string; tipo: TipoEquipamento; marca: string; modelo: string; anoFabricacao: number; estadoFisico: EstadoFisico; pesoQuilogramas: number; loteId: string };
-type AtualizarBody = Omit<CriarBody, "id" | "loteId"> & { justificativa?: string };
-type StatusBody = { status: StatusRastreamento };
+type CriarBody = { id: string; tipo: TipoEquipamento; marca: string; modelo: string; anoFabricacao: number; estadoFisico: EstadoFisico; pesoQuilogramas: number; loteId: string; versaoLote: number };
+type AtualizarBody = Omit<CriarBody, "id" | "loteId"> & { versao: number; justificativa?: string };
+type StatusBody = { versao: number; status: StatusRastreamento };
 type CorpoMovimentacao = { origem: string; destino: string; observacao?: string };
+type VersaoQuery = { versao: number };
 
 // Acrescenta a hora local de Brasília sem perder o instante original em UTC.
 function comHorarioBrasilia<T extends { dataHora: Date }>(movimentacao: T) {
@@ -35,13 +36,19 @@ export const equipamentoController = {
     async buscar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
         return responder(reply, async () => comHistoricoBrasilia(await equipamentoService.buscar(request.params.id)));
     },
-    async criar(request: FastifyRequest<{ Body: CriarBody }>, reply: FastifyReply) { return responder(reply, () => equipamentoService.criar(request.body), 201); },
-    async atualizar(request: FastifyRequest<{ Params: Params; Body: AtualizarBody }>, reply: FastifyReply) { return responder(reply, () => equipamentoService.atualizar(request.params.id, request.body, nomeResponsavel(request))); },
-    async atualizarStatus(request: FastifyRequest<{ Params: Params; Body: StatusBody }>, reply: FastifyReply) {
-        return responder(reply, () => equipamentoService.atualizarStatus(request.params.id, request.body.status, nomeResponsavel(request)));
+    async criar(request: FastifyRequest<{ Body: CriarBody }>, reply: FastifyReply) {
+        const { versaoLote, ...dados } = request.body;
+        return responder(reply, () => equipamentoService.criar(dados, versaoLote), 201);
     },
-    async excluir(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
-        try { await equipamentoService.excluir(request.params.id); return reply.code(204).send(); }
+    async atualizar(request: FastifyRequest<{ Params: Params; Body: AtualizarBody }>, reply: FastifyReply) {
+        const { versao, ...dados } = request.body;
+        return responder(reply, () => equipamentoService.atualizar(request.params.id, versao, dados, nomeResponsavel(request)));
+    },
+    async atualizarStatus(request: FastifyRequest<{ Params: Params; Body: StatusBody }>, reply: FastifyReply) {
+        return responder(reply, () => equipamentoService.atualizarStatus(request.params.id, request.body.versao, request.body.status, nomeResponsavel(request)));
+    },
+    async excluir(request: FastifyRequest<{ Params: Params; Querystring: VersaoQuery }>, reply: FastifyReply) {
+        try { await equipamentoService.excluir(request.params.id, request.query.versao); return reply.code(204).send(); }
         catch (erro) { return enviarErro(reply, erro); }
     },
     async listarMovimentacoes(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {

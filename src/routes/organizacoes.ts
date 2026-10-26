@@ -11,13 +11,14 @@ export async function registrarRotasOrganizacao(app: FastifyInstance): Promise<v
         telefone: { type: "string", minLength: 1 }, email: { type: "string", format: "email" },
     } as const;
     const criar = { type: "object", additionalProperties: false, required: ["id", ...Object.keys(campos)], properties: { id: { type: "string", minLength: 1 }, ...campos } } as const;
-    const editar = { type: "object", additionalProperties: false, required: Object.keys(campos), properties: campos } as const;
+    const editar = { type: "object", additionalProperties: false, required: ["versao", ...Object.keys(campos)], properties: { versao: { type: "integer", minimum: 1 }, ...campos } } as const;
+    const versaoQuery = { type: "object", additionalProperties: false, required: ["versao"], properties: { versao: { type: "integer", minimum: 1 } } } as const;
     const cadastro = { preHandler: [autenticar, exigirPapeis("OPERADOR_CADASTRO")] };
 
     app.get("/organizacoes", { ...cadastro, schema: { summary: "Lista organizações ativas" } }, organizacaoController.listar as any);
     app.get("/organizacoes/:id", { ...cadastro, schema: { summary: "Busca organização", params } }, organizacaoController.buscar as any);
     app.post("/organizacoes", { ...cadastro, schema: { summary: "Cadastra organização", body: criar } }, organizacaoController.criar as any);
     app.put("/organizacoes/:id", { ...cadastro, schema: { summary: "Atualiza organização", params, body: editar } }, organizacaoController.atualizar as any);
-    app.delete("/organizacoes/:id", { ...cadastro, schema: { summary: "Inativa organização e lotes/equipamentos em cadeia", params } }, organizacaoController.inativar as any);
-    app.patch("/organizacoes/:id/ativar", { ...cadastro, schema: { summary: "Reativa organização", params } }, organizacaoController.ativar as any);
+    app.delete("/organizacoes/:id", { ...cadastro, schema: { summary: "Inativa organização e lotes/equipamentos em cadeia", params, querystring: versaoQuery } }, organizacaoController.inativar as any);
+    app.patch("/organizacoes/:id/ativar", { ...cadastro, schema: { summary: "Reativa organização e filhos", params, body: { type: "object", additionalProperties: false, required: ["versao"], properties: { versao: { type: "integer", minimum: 1 } } } } }, organizacaoController.ativar as any);
 }

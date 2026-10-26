@@ -10,7 +10,8 @@ export async function registrarRotasLote(app: FastifyInstance): Promise<void> {
         notaFiscal: { type: "string", minLength: 1 }, transportadora: { type: "string", minLength: 1 }, observacoes: { type: "string" },
     } as const;
     const criar = { type: "object", additionalProperties: false, required: ["id", ...Object.keys(campos).slice(0, 4)], properties: { id: { type: "string", minLength: 1 }, ...campos } } as const;
-    const atualizar = { type: "object", additionalProperties: false, required: Object.keys(campos), properties: campos } as const;
+    const atualizar = { type: "object", additionalProperties: false, required: ["versao", ...Object.keys(campos)], properties: { versao: { type: "integer", minimum: 1 }, ...campos } } as const;
+    const versaoQuery = { type: "object", additionalProperties: false, required: ["versao"], properties: { versao: { type: "integer", minimum: 1 } } } as const;
     const guard = { preHandler: [autenticar, exigirPapeis("GESTOR_ALMOXARIFADO")] };
 
     app.get("/lotes", { ...guard, schema: { summary: "Lista lotes ativos" } }, loteController.listar as any);
@@ -32,9 +33,9 @@ export async function registrarRotasLote(app: FastifyInstance): Promise<void> {
         schema: {
             summary: "Altera manualmente o status do lote; TRIAGEM_CONCLUIDA é automática",
             params,
-            body: { type: "object", additionalProperties: false, required: ["status"], properties: { status: { type: "string", enum: ["RECEBIDO", "EM_TRIAGEM", "ENCAMINHADO", "FINALIZADO"] } } },
+            body: { type: "object", additionalProperties: false, required: ["versao", "status"], properties: { versao: { type: "integer", minimum: 1 }, status: { type: "string", enum: ["RECEBIDO", "EM_TRIAGEM", "ENCAMINHADO", "FINALIZADO"] } } },
         },
     }, loteController.atualizarStatus as any);
-    app.delete("/lotes/:id", { ...guard, schema: { summary: "Inativa lote e seus equipamentos", params } }, loteController.inativar as any);
-    app.patch("/lotes/:id/ativar", { ...guard, schema: { summary: "Reativa lote e seus equipamentos se a organização estiver ativa", params } }, loteController.ativar as any);
+    app.delete("/lotes/:id", { ...guard, schema: { summary: "Inativa lote e seus equipamentos", params, querystring: versaoQuery } }, loteController.inativar as any);
+    app.patch("/lotes/:id/ativar", { ...guard, schema: { summary: "Reativa lote e seus equipamentos se a organização estiver ativa", params, body: { type: "object", additionalProperties: false, required: ["versao"], properties: { versao: { type: "integer", minimum: 1 } } } } }, loteController.ativar as any);
 }

@@ -25,13 +25,14 @@ export async function registrarRotasContrato(app: FastifyInstance): Promise<void
     const atualizar = {
         type: "object",
         additionalProperties: false,
-        required: Object.keys(propriedades),
-        properties: propriedades,
+        required: ["versao", ...Object.keys(propriedades)],
+        properties: { versao: { type: "integer", minimum: 1 }, ...propriedades },
     } as const;
+    const versaoQuery = { type: "object", additionalProperties: false, required: ["versao"], properties: { versao: { type: "integer", minimum: 1 } } } as const;
 
     app.get("/contratos", { preHandler: [autenticar, exigirPapeis("OPERADOR_CADASTRO")], schema: { summary: "Lista contratos" } }, contratoController.listar as any);
     app.get("/contratos/:id", { preHandler: [autenticar, exigirPapeis("OPERADOR_CADASTRO")], schema: { summary: "Busca contrato", params } }, contratoController.buscar as any);
     app.post("/contratos", { preHandler: [autenticar, exigirPapeis("OPERADOR_CADASTRO")], schema: { summary: "Cadastra contrato para uma organização", body: criar } }, contratoController.criar as any);
     app.put("/contratos/:id", { preHandler: [autenticar, exigirPapeis("OPERADOR_CADASTRO")], schema: { summary: "Atualiza contrato", params, body: atualizar } }, contratoController.atualizar as any);
-    app.delete("/contratos/:id", { preHandler: [autenticar, exigirPapeis("OPERADOR_CADASTRO")], schema: { summary: "Exclui contrato definitivamente", params } }, contratoController.excluir as any);
+    app.delete("/contratos/:id", { preHandler: [autenticar, exigirPapeis("OPERADOR_CADASTRO")], schema: { summary: "Exclui contrato definitivamente", params, querystring: versaoQuery } }, contratoController.excluir as any);
 }
