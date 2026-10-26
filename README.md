@@ -81,6 +81,18 @@ Organizações, contratos, lotes e equipamentos têm o campo `versao`, iniciado 
 
 Exemplo: se `GET /lotes/LOTE-01` retorna `"versao": 3`, envie `"versao": 3` no JSON do `PUT /lotes/LOTE-01`. Se outra alteração já ocorreu, o retorno `409` indica que é preciso consultar o lote novamente.
 
+## Executar os testes automatizados da API
+
+Os testes usam uma base separada e criam dados com prefixo `TEST-`; não apontam para o banco de demonstração. Crie no PostgreSQL um banco chamado `greencode_test` e configure a URL dele no terminal PowerShell:
+
+    $env:TEST_DATABASE_URL = "postgresql://postgres:SUA_SENHA@localhost:5432/greencode_test?schema=public"
+    $env:DATABASE_URL = $env:TEST_DATABASE_URL
+    npx prisma migrate deploy
+    Remove-Item Env:DATABASE_URL
+    npm run test:api
+
+O script recusa conexões cujo nome do banco não contenha `test`. Ele cria seu próprio administrador temporário, executa fluxos de autenticação, permissões, CRUD, regras de negócio, relatórios, reativação e conflitos de versão; ao final, remove os registros criados pelo teste. Se algum passo falhar, o resultado mostra a verificação que precisa de atenção.
+
 ## Observações
 
 Os dados da AV1 não são importados. A AV2 começa com dados fictícios criados pelo seed.
