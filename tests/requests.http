@@ -1,11 +1,12 @@
 @url = http://localhost:3000
-@admin = TROQUE_PELO_USUARIO_DO_ENV
-@senhaAdmin = TROQUE_PELA_SENHA_DO_ENV
+@admin = admin
+@senhaAdmin = 240707
 
-# Roteiro manual: aplique as migrações, rode npm run db:seed e npm run dev.
-# No VS Code, use a extensão REST Client e envie as requisições na ordem.
-# Respostas esperadas estão nos títulos. Se repetir, troque HTTP-001 e os nomes de usuário.
-# As chamadas opcionais de limpeza ficam no final.
+# Roteiro manual: aplique as migrações, rode npm run db:seed e npm run dev
+# No VS Code, use a extensão REST Client e envie as requisições na ordem
+# Respostas esperadas estão nos títulos. Se repetir, troque HTTP-001 e os nomes de usuário
+# Fazer login não troca uma sessão global: cada pedido usa o token escrito no seu cabeçalho Authorization
+# As chamadas opcionais de limpeza ficam no final
 
 ### Saúde da API — sucesso 200
 GET {{url}}/health
@@ -26,7 +27,8 @@ Content-Type: application/json
 
 {"usuario":"{{admin}}","senha":"senha-errada"}
 
-### Criar operador — sucesso 201
+# ===== ADMINISTRADOR: criar as contas de demonstração (estes pedidos usam loginAdmin) =====
+### Criar operador — sucesso 201 (token: administrador)
 # @name criarOperador
 POST {{url}}/usuarios
 Authorization: Bearer {{loginAdmin.response.body.$.token}}
@@ -41,14 +43,7 @@ Content-Type: application/json
 
 {"usuario":"http_invalido","senha":"senha","papel":"PAPEL_INVALIDO"}
 
-### Login operador — sucesso 200
-# @name loginOperador
-POST {{url}}/auth/login
-Content-Type: application/json
-
-{"usuario":"http_operador_001","senha":"Senha-HTTP-001!"}
-
-### Criar gestor — sucesso 201
+### Criar gestor — sucesso 201 (token: administrador)
 # @name criarGestor
 POST {{url}}/usuarios
 Authorization: Bearer {{loginAdmin.response.body.$.token}}
@@ -56,14 +51,7 @@ Content-Type: application/json
 
 {"usuario":"http_gestor_001","senha":"Senha-HTTP-002!","papel":"GESTOR_ALMOXARIFADO"}
 
-### Login gestor — sucesso 200
-# @name loginGestor
-POST {{url}}/auth/login
-Content-Type: application/json
-
-{"usuario":"http_gestor_001","senha":"Senha-HTTP-002!"}
-
-### Criar auditor — sucesso 201
+### Criar auditor — sucesso 201 (token: administrador)
 # @name criarAuditor
 POST {{url}}/usuarios
 Authorization: Bearer {{loginAdmin.response.body.$.token}}
@@ -71,13 +59,28 @@ Content-Type: application/json
 
 {"usuario":"http_auditor_001","senha":"Senha-HTTP-003!","papel":"AUDITOR"}
 
-### Login auditor — sucesso 200
+### Login operador — sucesso 200 (token para o bloco de operador)
+# @name loginOperador
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{"usuario":"http_operador_001","senha":"Senha-HTTP-001!"}
+
+### Login gestor — sucesso 200 (token para o bloco de gestor)
+# @name loginGestor
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{"usuario":"http_gestor_001","senha":"Senha-HTTP-002!"}
+
+### Login auditor — sucesso 200 (token para o bloco de auditor)
 # @name loginAuditor
 POST {{url}}/auth/login
 Content-Type: application/json
 
 {"usuario":"http_auditor_001","senha":"Senha-HTTP-003!"}
 
+# ===== OPERADOR DE CADASTRO: pedidos deste bloco usam loginOperador =====
 ### Listar organizações — sucesso 200
 GET {{url}}/organizacoes
 Authorization: Bearer {{loginOperador.response.body.$.token}}
@@ -175,6 +178,7 @@ Content-Type: application/json
 
 {"versao":{{atualizarContrato.response.body.$.versao}},"dataAssinatura":"2026-01-01T12:00:00.000Z","dataVencimento":"2099-12-31T12:00:00.000Z","clausulas":[],"valorMensal":-1,"renovacaoAutomatica":false}
 
+# ===== GESTOR DE ALMOXARIFADO: pedidos deste bloco usam loginGestor =====
 ### Criar lote — sucesso 201; o status inicial deve ser RECEBIDO
 # @name criarLote
 POST {{url}}/lotes
@@ -250,6 +254,7 @@ Authorization: Bearer {{loginGestor.response.body.$.token}}
 ### Listar equipamentos sem token — erro 401
 GET {{url}}/equipamentos
 
+# ===== AUDITOR: consultas deste bloco usam loginAuditor =====
 ### Buscar equipamento e histórico — sucesso 200
 GET {{url}}/equipamentos/HTTP-EQ-001
 Authorization: Bearer {{loginAuditor.response.body.$.token}}
@@ -381,6 +386,7 @@ Authorization: Bearer {{loginAuditor.response.body.$.token}}
 GET {{url}}/lotes/NAO-EXISTE/relatorio-triagem
 Authorization: Bearer {{loginAuditor.response.body.$.token}}
 
+# ===== ADMINISTRADOR: gerenciamento de usuários (use o token loginAdmin) =====
 ### Listar usuários — sucesso 200
 GET {{url}}/usuarios
 Authorization: Bearer {{loginAdmin.response.body.$.token}}

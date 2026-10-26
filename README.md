@@ -24,6 +24,14 @@ API REST da continuação do GreenCode da AV1, feita com TypeScript, Fastify, Pr
 
 O seed não importa dados da AV1. Ele cria o administrador com a senha protegida por hash e salt e inclui organizações, contratos, lotes, equipamentos e movimentações fictícios, cobrindo status e contrato expirado. Os IDs de demonstração começam com `DEMO-`.
 
+## Testar com `tests/requests.http`
+
+O seed e o roteiro HTTP têm funções diferentes: o seed prepara o administrador e os exemplos `DEMO-`; o arquivo `tests/requests.http` envia chamadas à API e mostra as respostas. Os cadastros feitos pelo roteiro usam IDs `HTTP-` e nomes `http_`, então não substituem nem se confundem com os registros `DEMO-`.
+
+Antes de enviar as requisições, rode o seed e inicie a API. Abra `tests/requests.http` no VS Code com a extensão REST Client e confira no início do arquivo se `@admin` e `@senhaAdmin` correspondem às credenciais `ADMIN_USER` e `ADMIN_PASSWORD` do `.env`. Envie os pedidos na ordem indicada. Um dos cenários de erro usa `DEMO-ORG-CONTRATO-EXPIRADO`, por isso depende dos dados de exemplo do seed.
+
+Os registros `HTTP-` permanecem no banco depois dos testes; rodar o seed novamente não os apaga. Se quiser repetir o roteiro desde o começo com os mesmos IDs, pare o servidor e execute `npx prisma migrate reset`, confirme a operação e rode `npm run db:seed` novamente. **O reset apaga todos os dados do banco apontado por `DATABASE_URL`**, então confira no `.env` que está selecionado o banco local de desenvolvimento. Como alternativa, troque os IDs e nomes de usuário de demonstração no arquivo antes de repetir.
+
 ## Iniciar e testar pela documentação
 
 Inicie o servidor:
