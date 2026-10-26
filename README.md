@@ -18,11 +18,11 @@ API REST da continuação do GreenCode da AV1, feita com TypeScript, Fastify, Pr
 
    O comando de migração também gera o Prisma Client. Se você alterar `prisma/schema.prisma` depois, rode `npm run db:generate`.
 
-7. Crie o administrador inicial:
+7. Crie o administrador inicial e os dados demonstrativos:
 
        npm run db:seed
 
-O seed não imprime nem salva a senha em texto puro. A senha é protegida com hash e salt, seguindo o formato da AV1.
+O seed não importa dados da AV1. Ele cria o administrador com a senha protegida por hash e salt e inclui organizações, contratos, lotes, equipamentos e movimentações fictícios, cobrindo status e contrato expirado. Os IDs de demonstração começam com `DEMO-`.
 
 ## Iniciar e testar pela documentação
 
@@ -68,8 +68,8 @@ O responsável altera manualmente os status `RECEBIDO`, `EM_TRIAGEM`, `ENCAMINHA
 - `npm run db:validate`: valida o schema Prisma.
 - `npm run db:format`: formata o schema Prisma.
 - `npm run db:studio`: abre a interface visual das tabelas.
-- `npm run db:seed`: cria o primeiro administrador, se ainda não houver um ativo.
+- `npm run db:seed`: cria o administrador inicial, se necessário, e insere ou atualiza os dados de exemplo `DEMO-`.
 
 ## Observações
 
-Os dados existentes na pasta `data` da AV1 não são importados automaticamente para o PostgreSQL. Essa migração precisa ser planejada para preservar IDs e relações.
+Os dados da AV1 não são importados. A AV2 começa com dados fictícios criados pelo seed.
