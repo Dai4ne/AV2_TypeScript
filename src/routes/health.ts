@@ -8,6 +8,8 @@ export async function registrarRotaSaude(app: FastifyInstance): Promise<void> {
         {
             schema: {
                 summary: "Verifica a API e a conexão com o banco",
+                description: "Rota pública. Se o banco estiver indisponível, a API responde com erro interno.",
+                tags: ["saúde"],
                 security: [],
                 response: {
                     200: {
@@ -18,6 +20,7 @@ export async function registrarRotaSaude(app: FastifyInstance): Promise<void> {
                         },
                         required: ["status", "banco"],
                     },
+                    500: { type: "object", properties: { statusCode: { type: "integer" }, error: { type: "string" }, message: { type: "string" } } },
                 },
             },
         },
