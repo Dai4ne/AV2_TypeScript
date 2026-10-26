@@ -1,0 +1,540 @@
+@url = http://localhost:3000
+@admin = TROQUE_PELO_USUARIO_DO_ENV
+@senhaAdmin = TROQUE_PELA_SENHA_DO_ENV
+
+# Roteiro manual: aplique as migrações, rode npm run db:seed e npm run dev.
+# No VS Code, use a extensão REST Client e envie as requisições na ordem.
+# Respostas esperadas estão nos títulos. Se repetir, troque HTTP-001 e os nomes de usuário.
+# As chamadas opcionais de limpeza ficam no final.
+
+### Saúde da API — sucesso 200
+GET {{url}}/health
+
+### Saúde — erro 500 (exemplo: pare o PostgreSQL antes de enviar; depois religue-o)
+GET {{url}}/health
+
+### Login administrador — sucesso 200
+# @name loginAdmin
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{"usuario":"{{admin}}","senha":"{{senhaAdmin}}"}
+
+### Login — senha incorreta, erro 401
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{"usuario":"{{admin}}","senha":"senha-errada"}
+
+### Criar operador — sucesso 201
+# @name criarOperador
+POST {{url}}/usuarios
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{"usuario":"http_operador_001","senha":"Senha-HTTP-001!","papel":"OPERADOR_CADASTRO"}
+
+### Criar usuário com papel inválido — erro 400
+POST {{url}}/usuarios
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{"usuario":"http_invalido","senha":"senha","papel":"PAPEL_INVALIDO"}
+
+### Login operador — sucesso 200
+# @name loginOperador
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{"usuario":"http_operador_001","senha":"Senha-HTTP-001!"}
+
+### Criar gestor — sucesso 201
+# @name criarGestor
+POST {{url}}/usuarios
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{"usuario":"http_gestor_001","senha":"Senha-HTTP-002!","papel":"GESTOR_ALMOXARIFADO"}
+
+### Login gestor — sucesso 200
+# @name loginGestor
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{"usuario":"http_gestor_001","senha":"Senha-HTTP-002!"}
+
+### Criar auditor — sucesso 201
+# @name criarAuditor
+POST {{url}}/usuarios
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{"usuario":"http_auditor_001","senha":"Senha-HTTP-003!","papel":"AUDITOR"}
+
+### Login auditor — sucesso 200
+# @name loginAuditor
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{"usuario":"http_auditor_001","senha":"Senha-HTTP-003!"}
+
+### Listar organizações — sucesso 200
+GET {{url}}/organizacoes
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Listar organizações sem token — erro 401
+GET {{url}}/organizacoes
+
+### Criar organização — sucesso 201
+# @name criarOrg
+POST {{url}}/organizacoes
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"id":"HTTP-ORG-001","razaoSocial":"Organização HTTP","cnpj":"12345678000195","inscricaoEstadual":"ISENTO","enderecoCompleto":"Rua Teste, 1","telefone":"11987654321","email":"http-001@example.test"}
+
+### Criar organização com CNPJ inválido — erro 400
+POST {{url}}/organizacoes
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"id":"HTTP-ORG-INVALIDA","razaoSocial":"Inválida","cnpj":"11111111111111","inscricaoEstadual":"ISENTO","enderecoCompleto":"Rua Teste","telefone":"11987654321","email":"invalida@example.test"}
+
+### Criar organização com e-mail duplicado — erro 409
+POST {{url}}/organizacoes
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"id":"HTTP-ORG-DUPLICADA","razaoSocial":"E-mail repetido","cnpj":"98765432000198","inscricaoEstadual":"ISENTO","enderecoCompleto":"Rua Teste, 3","telefone":"11987654321","email":"http-001@example.test"}
+
+### Buscar organização — sucesso 200
+GET {{url}}/organizacoes/HTTP-ORG-001
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Buscar organização inexistente — erro 404
+GET {{url}}/organizacoes/NAO-EXISTE
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Atualizar organização — sucesso 200
+# @name atualizarOrg
+PUT {{url}}/organizacoes/HTTP-ORG-001
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{criarOrg.response.body.$.versao}},"razaoSocial":"Organização HTTP Atualizada","cnpj":"12345678000195","inscricaoEstadual":"ISENTO","enderecoCompleto":"Rua Teste, 2","telefone":"11987654321","email":"http-001@example.test"}
+
+### Atualizar com versão antiga — erro 409
+PUT {{url}}/organizacoes/HTTP-ORG-001
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{criarOrg.response.body.$.versao}},"razaoSocial":"Versão antiga","cnpj":"12345678000195","inscricaoEstadual":"ISENTO","enderecoCompleto":"Rua Teste, 2","telefone":"11987654321","email":"http-001@example.test"}
+
+### Criar contrato — sucesso 201
+# @name criarContrato
+POST {{url}}/contratos
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"organizacaoId":"HTTP-ORG-001","dataAssinatura":"2026-01-01T12:00:00.000Z","dataVencimento":"2099-12-31T12:00:00.000Z","clausulas":["Demonstração"],"valorMensal":1500,"renovacaoAutomatica":false}
+
+### Criar segundo contrato para mesma organização — erro 409
+POST {{url}}/contratos
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"organizacaoId":"HTTP-ORG-001","dataAssinatura":"2026-01-01T12:00:00.000Z","dataVencimento":"2099-12-31T12:00:00.000Z","clausulas":[],"valorMensal":1,"renovacaoAutomatica":false}
+
+### Listar contratos — sucesso 200
+GET {{url}}/contratos
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Listar contratos sem token — erro 401
+GET {{url}}/contratos
+
+### Buscar contrato — sucesso 200
+GET {{url}}/contratos/{{criarContrato.response.body.$.id}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Buscar contrato inexistente — erro 404
+GET {{url}}/contratos/NAO-EXISTE
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Atualizar contrato — sucesso 200
+# @name atualizarContrato
+PUT {{url}}/contratos/{{criarContrato.response.body.$.id}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{criarContrato.response.body.$.versao}},"dataAssinatura":"2026-01-01T12:00:00.000Z","dataVencimento":"2099-12-31T12:00:00.000Z","clausulas":["Demonstração atualizada"],"valorMensal":1600,"renovacaoAutomatica":false}
+
+### Atualizar contrato com valor inválido — erro 400
+PUT {{url}}/contratos/{{criarContrato.response.body.$.id}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{atualizarContrato.response.body.$.versao}},"dataAssinatura":"2026-01-01T12:00:00.000Z","dataVencimento":"2099-12-31T12:00:00.000Z","clausulas":[],"valorMensal":-1,"renovacaoAutomatica":false}
+
+### Criar lote — sucesso 201; o status inicial deve ser RECEBIDO
+# @name criarLote
+POST {{url}}/lotes
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"id":"HTTP-LOTE-001","dataEntrada":"{{$datetime iso8601}}","organizacaoId":"HTTP-ORG-001","notaFiscal":"HTTP-NF-001","transportadora":"Transportadora de Teste"}
+
+### Criar lote para organização com contrato expirado — erro 409
+POST {{url}}/lotes
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"id":"HTTP-LOTE-SEM-CONTRATO","dataEntrada":"{{$datetime iso8601}}","organizacaoId":"DEMO-ORG-CONTRATO-EXPIRADO","notaFiscal":"HTTP-NF-002","transportadora":"Transportadora de Teste"}
+
+### Listar lotes — sucesso 200
+GET {{url}}/lotes
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Listar lotes sem token — erro 401
+GET {{url}}/lotes
+
+### Listar lotes por período — sucesso 200
+GET {{url}}/lotes/periodo?dataInicio=2026-01-01T00:00:00.000Z&dataFim=2099-12-31T23:59:59.000Z
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Período invertido — erro 400
+GET {{url}}/lotes/periodo?dataInicio=2026-12-31T00:00:00.000Z&dataFim=2026-01-01T00:00:00.000Z
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Buscar lote — sucesso 200
+GET {{url}}/lotes/HTTP-LOTE-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Buscar lote inexistente — erro 404
+GET {{url}}/lotes/NAO-EXISTE
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Atualizar lote — sucesso 200
+# @name atualizarLote
+PUT {{url}}/lotes/HTTP-LOTE-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{criarLote.response.body.$.versao}},"dataEntrada":"{{$datetime iso8601}}","organizacaoId":"HTTP-ORG-001","notaFiscal":"HTTP-NF-001","transportadora":"Transportadora Atualizada","observacoes":"Lote de demonstração"}
+
+### Atualizar lote com versão antiga — erro 409
+PUT {{url}}/lotes/HTTP-LOTE-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{criarLote.response.body.$.versao}},"dataEntrada":"{{$datetime iso8601}}","organizacaoId":"HTTP-ORG-001","notaFiscal":"HTTP-NF-001","transportadora":"Versão antiga","observacoes":""}
+
+### Cadastrar equipamento — sucesso 201
+# @name criarEquipamento
+POST {{url}}/equipamentos
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"id":"HTTP-EQ-001","loteId":"HTTP-LOTE-001","versaoLote":{{atualizarLote.response.body.$.versao}},"tipo":"NOTEBOOK","marca":"Exemplo","modelo":"Modelo 1","anoFabricacao":2022,"estadoFisico":"BOM_ESTADO","pesoQuilogramas":2.5}
+
+### Cadastrar equipamento em lote inexistente — erro 404
+POST {{url}}/equipamentos
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"id":"HTTP-EQ-ERRO","loteId":"NAO-EXISTE","versaoLote":1,"tipo":"NOTEBOOK","marca":"Exemplo","modelo":"Modelo 1","anoFabricacao":2022,"estadoFisico":"BOM_ESTADO","pesoQuilogramas":2.5}
+
+### Listar equipamentos — sucesso 200
+GET {{url}}/equipamentos
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Listar equipamentos sem token — erro 401
+GET {{url}}/equipamentos
+
+### Buscar equipamento e histórico — sucesso 200
+GET {{url}}/equipamentos/HTTP-EQ-001
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Buscar equipamento inexistente — erro 404
+GET {{url}}/equipamentos/NAO-EXISTE
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Atualizar equipamento sem justificativa para piora grande — erro 400
+PUT {{url}}/equipamentos/HTTP-EQ-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{criarEquipamento.response.body.$.versao}},"tipo":"NOTEBOOK","marca":"Exemplo","modelo":"Modelo 1","anoFabricacao":2022,"estadoFisico":"DANIFICADO_GRAVE","pesoQuilogramas":2.5}
+
+### Atualizar equipamento com justificativa — sucesso 200
+# @name atualizarEquipamento
+PUT {{url}}/equipamentos/HTTP-EQ-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{criarEquipamento.response.body.$.versao}},"tipo":"NOTEBOOK","marca":"Exemplo","modelo":"Modelo 1","anoFabricacao":2022,"estadoFisico":"DANIFICADO_GRAVE","pesoQuilogramas":2.5,"justificativa":"Dano observado na triagem."}
+
+### Alterar status do equipamento — sucesso 200
+# @name atualizarStatusEquipamento
+PATCH {{url}}/equipamentos/HTTP-EQ-001/status
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{atualizarEquipamento.response.body.$.versao}},"status":"EM_TRIAGEM"}
+
+### Alterar status para valor inválido — erro 400
+PATCH {{url}}/equipamentos/HTTP-EQ-001/status
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{atualizarStatusEquipamento.response.body.$.versao}},"status":"STATUS_INVALIDO"}
+
+### Consultar movimentações — sucesso 200
+GET {{url}}/equipamentos/HTTP-EQ-001/movimentacoes
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Consultar movimentações sem permissão — erro 403
+GET {{url}}/equipamentos/HTTP-EQ-001/movimentacoes
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Registrar movimentação — sucesso 201
+POST {{url}}/equipamentos/HTTP-EQ-001/movimentacoes
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"origem":"RECEBIMENTO","destino":"TRIAGEM","observacao":"Movimentação de teste"}
+
+### Registrar movimentação em equipamento inexistente — erro 404
+POST {{url}}/equipamentos/NAO-EXISTE/movimentacoes
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"origem":"RECEBIMENTO","destino":"TRIAGEM"}
+
+# @name loteAntesStatus
+GET {{url}}/lotes/HTTP-LOTE-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Alterar status manual do lote — sucesso 200
+# @name atualizarStatusLote
+PATCH {{url}}/lotes/HTTP-LOTE-001/status
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{loteAntesStatus.response.body.$.versao}},"status":"EM_TRIAGEM"}
+
+### Tentar definir TRIAGEM_CONCLUIDA manualmente — erro 400
+PATCH {{url}}/lotes/HTTP-LOTE-001/status
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{atualizarStatusLote.response.body.$.versao}},"status":"TRIAGEM_CONCLUIDA"}
+
+### Finalizar o equipamento e concluir o lote automaticamente — sucesso 200
+# @name baixaEquipamento
+PATCH {{url}}/equipamentos/HTTP-EQ-001/status
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{atualizarStatusEquipamento.response.body.$.versao}},"status":"BAIXA_DEFINITIVA"}
+
+### Conferir o lote concluído automaticamente — sucesso 200
+# @name loteConcluido
+GET {{url}}/lotes/HTTP-LOTE-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Alterar manualmente lote já concluído — erro 409
+PATCH {{url}}/lotes/HTTP-LOTE-001/status
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{loteConcluido.response.body.$.versao}},"status":"FINALIZADO"}
+
+### Relatório de organização — sucesso 200
+GET {{url}}/relatorios/organizacoes/HTTP-ORG-001?dataInicio=2026-01-01T00:00:00.000Z&dataFim=2099-12-31T23:59:59.000Z
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Relatório de organização inexistente — erro 404
+GET {{url}}/relatorios/organizacoes/NAO-EXISTE?dataInicio=2026-01-01T00:00:00.000Z&dataFim=2099-12-31T23:59:59.000Z
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Relatório por status — sucesso 200
+GET {{url}}/relatorios/status?status=EM_TRIAGEM
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Relatório com status inválido — erro 400
+GET {{url}}/relatorios/status?status=INVALIDO
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Relatório financeiro — sucesso 200
+GET {{url}}/relatorios/financeiro?dataInicio=2026-01-01T00:00:00.000Z&dataFim=2099-12-31T23:59:59.000Z
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Relatório financeiro com período invertido — erro 400
+GET {{url}}/relatorios/financeiro?dataInicio=2026-12-31T00:00:00.000Z&dataFim=2026-01-01T00:00:00.000Z
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Relatório de triagem do lote — sucesso 200
+GET {{url}}/lotes/HTTP-LOTE-001/relatorio-triagem
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Relatório de triagem de lote inexistente — erro 404
+GET {{url}}/lotes/NAO-EXISTE/relatorio-triagem
+Authorization: Bearer {{loginAuditor.response.body.$.token}}
+
+### Listar usuários — sucesso 200
+GET {{url}}/usuarios
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Listar usuários como gestor — erro 403
+GET {{url}}/usuarios
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Listar usuários por papel — sucesso 200
+GET {{url}}/usuarios/papel/OPERADOR_CADASTRO
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Papel inválido na consulta — erro 400
+GET {{url}}/usuarios/papel/INVALIDO
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Buscar usuário — sucesso 200
+GET {{url}}/usuarios/{{criarOperador.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Buscar usuário inexistente — erro 404
+GET {{url}}/usuarios/NAO-EXISTE
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Atualizar usuário — sucesso 200
+# @name atualizarOperador
+PUT {{url}}/usuarios/{{criarOperador.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{"usuario":"http_operador_atualizado","papel":"OPERADOR_CADASTRO"}
+
+### Atualizar usuário inexistente — erro 404
+PUT {{url}}/usuarios/NAO-EXISTE
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{"usuario":"nao_existe","papel":"AUDITOR"}
+
+### Alterar senha própria com senha atual correta — sucesso 200
+PATCH {{url}}/usuarios/{{criarOperador.response.body.$.id}}/senha
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"senhaAtual":"Senha-HTTP-001!","senha":"Senha-HTTP-Nova!"}
+
+### Alterar senha própria com senha atual incorreta — erro 401
+PATCH {{url}}/usuarios/{{criarOperador.response.body.$.id}}/senha
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"senhaAtual":"errada","senha":"Outra-Senha!"}
+
+### Inativar usuário — sucesso 200
+DELETE {{url}}/usuarios/{{criarAuditor.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Inativar usuário inexistente — erro 404
+DELETE {{url}}/usuarios/NAO-EXISTE
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Reativar usuário — sucesso 200
+PATCH {{url}}/usuarios/{{criarAuditor.response.body.$.id}}/ativar
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Reativar usuário inexistente — erro 404
+PATCH {{url}}/usuarios/NAO-EXISTE/ativar
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Excluir contrato com versão antiga — erro 409
+DELETE {{url}}/contratos/{{criarContrato.response.body.$.id}}?versao={{criarContrato.response.body.$.versao}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Excluir contrato — sucesso (resposta esperada: 200)
+DELETE {{url}}/contratos/{{atualizarContrato.response.body.$.id}}?versao={{atualizarContrato.response.body.$.versao}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Inativar e reativar lote — sucessos 200
+# @name inativarLote
+DELETE {{url}}/lotes/HTTP-LOTE-001?versao={{loteConcluido.response.body.$.versao}}
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Lote inativo não é encontrado — erro 404
+GET {{url}}/lotes/HTTP-LOTE-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Reativar lote — sucesso 200
+PATCH {{url}}/lotes/HTTP-LOTE-001/ativar
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{inativarLote.response.body.$.versao}}}
+
+### Reativar lote inexistente — erro 404
+PATCH {{url}}/lotes/NAO-EXISTE/ativar
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":1}
+
+### Inativar e reativar organização e seus filhos — sucesso 200
+# @name inativarOrg
+DELETE {{url}}/organizacoes/HTTP-ORG-001?versao={{atualizarOrg.response.body.$.versao}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Reativar organização e seus lotes/equipamentos — sucesso 200
+PATCH {{url}}/organizacoes/HTTP-ORG-001/ativar
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":{{inativarOrg.response.body.$.versao}}}
+
+### Reativar organização inexistente — erro 404
+PATCH {{url}}/organizacoes/NAO-EXISTE/ativar
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+Content-Type: application/json
+
+{"versao":1}
+
+### Excluir equipamento e histórico — sucesso 204 (rode após as reativações)
+# @name equipamentoAtual
+GET {{url}}/equipamentos/HTTP-EQ-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### Excluir equipamento com versão antiga — erro 409 (rode antes da exclusão)
+DELETE {{url}}/equipamentos/HTTP-EQ-001?versao={{criarEquipamento.response.body.$.versao}}
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Excluir equipamento — sucesso 204
+DELETE {{url}}/equipamentos/HTTP-EQ-001?versao={{equipamentoAtual.response.body.$.versao}}
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Excluir lote — sucesso; consultar versão atual antes
+# @name loteAtual
+GET {{url}}/lotes/HTTP-LOTE-001
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Inativar lote com versão antiga — erro 409 (rode antes da exclusão abaixo)
+DELETE {{url}}/lotes/HTTP-LOTE-001?versao={{criarLote.response.body.$.versao}}
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Inativar lote — sucesso 200
+DELETE {{url}}/lotes/HTTP-LOTE-001?versao={{loteAtual.response.body.$.versao}}
+Authorization: Bearer {{loginGestor.response.body.$.token}}
+
+### Inativar organização e filhos — sucesso; consultar versão atual
+# @name orgAtual
+GET {{url}}/organizacoes/HTTP-ORG-001
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Inativar organização com versão antiga — erro 409
+DELETE {{url}}/organizacoes/HTTP-ORG-001?versao={{criarOrg.response.body.$.versao}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+### Inativar organização — sucesso 200
+DELETE {{url}}/organizacoes/HTTP-ORG-001?versao={{orgAtual.response.body.$.versao}}
+Authorization: Bearer {{loginOperador.response.body.$.token}}
