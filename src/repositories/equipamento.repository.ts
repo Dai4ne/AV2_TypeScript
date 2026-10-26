@@ -36,8 +36,28 @@ export const equipamentoRepository = {
     atualizar(id: string, dados: {
         tipo?: TipoEquipamento; marca?: string; modelo?: string; anoFabricacao?: number;
         estadoFisico?: EstadoFisico; pesoQuilogramas?: number;
-    }) {
-        return prisma.equipamento.update({ where: { id }, data: dados });
+    }, responsavel: string, justificativa?: string) {
+        return prisma.$transaction(async (tx) => {
+            const atual = await tx.equipamento.findUnique({ where: { id } });
+            if (!atual) throw new Error("Equipamento não encontrado.");
+            const equipamento = await tx.equipamento.update({ where: { id }, data: dados });
+
+            if (dados.estadoFisico && dados.estadoFisico !== atual.estadoFisico) {
+                const detalhe = `Estado físico alterado de ${atual.estadoFisico} para ${dados.estadoFisico}.`;
+                await tx.movimentacao.create({
+                    data: {
+                        equipamentoId: id,
+                        origem: atual.statusRastreamento,
+                        destino: atual.statusRastreamento,
+                        responsavel,
+                        observacao: justificativa?.trim()
+                            ? `${detalhe} Justificativa: ${justificativa.trim()}`
+                            : detalhe,
+                    },
+                });
+            }
+            return equipamento;
+        });
     },
     async atualizarStatus(id: string, status: StatusRastreamento, responsavel: string) {
         return prisma.$transaction(async (tx) => {

@@ -36,7 +36,7 @@ export const equipamentoController = {
         return responder(reply, async () => comHistoricoBrasilia(await equipamentoService.buscar(request.params.id)));
     },
     async criar(request: FastifyRequest<{ Body: CriarBody }>, reply: FastifyReply) { return responder(reply, () => equipamentoService.criar(request.body), 201); },
-    async atualizar(request: FastifyRequest<{ Params: Params; Body: AtualizarBody }>, reply: FastifyReply) { return responder(reply, () => equipamentoService.atualizar(request.params.id, request.body)); },
+    async atualizar(request: FastifyRequest<{ Params: Params; Body: AtualizarBody }>, reply: FastifyReply) { return responder(reply, () => equipamentoService.atualizar(request.params.id, request.body, nomeResponsavel(request))); },
     async atualizarStatus(request: FastifyRequest<{ Params: Params; Body: StatusBody }>, reply: FastifyReply) {
         return responder(reply, () => equipamentoService.atualizarStatus(request.params.id, request.body.status, nomeResponsavel(request)));
     },

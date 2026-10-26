@@ -14,6 +14,9 @@ export const loteRepository = {
     buscarPorId(id: string) {
         return prisma.lote.findUnique({ where: { id }, include: { equipamentos: { where: { ativo: true }, orderBy: { posicaoNoLote: "asc" } } } });
     },
+    buscarParaAtivar(id: string) {
+        return prisma.lote.findUnique({ where: { id }, include: { organizacao: true } });
+    },
     buscarOrganizacaoComContrato(organizacaoId: string) {
         return prisma.organizacao.findUnique({
             where: { id: organizacaoId },
@@ -34,6 +37,14 @@ export const loteRepository = {
         return prisma.$transaction(async (tx) => {
             await tx.equipamento.updateMany({ where: { loteId: id }, data: { ativo: false } });
             return tx.lote.update({ where: { id }, data: { ativo: false } });
+        });
+    },
+    async ativarEmCadeia(id: string) {
+        // Reativa o lote e seus equipamentos na mesma transação.
+        return prisma.$transaction(async (tx) => {
+            await tx.lote.update({ where: { id }, data: { ativo: true } });
+            await tx.equipamento.updateMany({ where: { loteId: id }, data: { ativo: true } });
+            return tx.lote.findUniqueOrThrow({ where: { id }, include: { equipamentos: { where: { ativo: true } } } });
         });
     },
 };

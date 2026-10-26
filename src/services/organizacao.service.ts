@@ -42,7 +42,7 @@ export const organizacaoService = {
     async ativar(id: string) {
         const organizacao = await organizacaoRepository.buscarPorId(id);
         if (!organizacao) throw new ErroOrganizacao(404, "Organização não encontrada.");
-        return organizacaoRepository.ativar(id);
+        return organizacaoRepository.ativarEmCadeia(id);
     },
 };
 

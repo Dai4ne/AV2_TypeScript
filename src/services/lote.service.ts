@@ -48,6 +48,12 @@ export const loteService = {
         return loteRepository.atualizarStatus(id, status);
     },
     async inativar(id: string) { await this.buscar(id); return loteRepository.inativarEmCadeia(id); },
+    async ativar(id: string) {
+        const lote = await loteRepository.buscarParaAtivar(id);
+        if (!lote) throw new ErroLote(404, "Lote não encontrado.");
+        if (!lote.organizacao.ativo) throw new ErroLote(409, "Reative a organização antes de reativar o lote.");
+        return loteRepository.ativarEmCadeia(id);
+    },
 };
 
 async function validarOrganizacaoComContrato(id: string) {

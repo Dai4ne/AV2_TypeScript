@@ -37,7 +37,7 @@ export const equipamentoService = {
         }
         return resultado.equipamento;
     },
-    async atualizar(id: string, dados: DadosAtualizacao) {
+    async atualizar(id: string, dados: DadosAtualizacao, responsavel: string) {
         const atual = await this.buscar(id);
         if (dados.anoFabricacao !== undefined && (!Number.isInteger(dados.anoFabricacao) || dados.anoFabricacao < 1900)) throw new ErroEquipamento(400, "Ano de fabricação inválido.");
         if (dados.pesoQuilogramas !== undefined && (!Number.isFinite(dados.pesoQuilogramas) || dados.pesoQuilogramas <= 0)) throw new ErroEquipamento(400, "Peso deve ser maior que zero.");
@@ -47,7 +47,7 @@ export const equipamentoService = {
             if (piora >= 2 && !dados.justificativa?.trim()) throw new ErroEquipamento(400, "Informe uma justificativa ao piorar duas ou mais categorias do estado físico.");
         }
         const { justificativa: _justificativa, ...campos } = dados;
-        try { return await equipamentoRepository.atualizar(id, campos); }
+        try { return await equipamentoRepository.atualizar(id, campos, responsavel, dados.justificativa); }
         catch (erro) {
             if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2025") throw new ErroEquipamento(404, "Equipamento não encontrado.");
             throw erro;

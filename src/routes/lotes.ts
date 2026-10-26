@@ -36,4 +36,5 @@ export async function registrarRotasLote(app: FastifyInstance): Promise<void> {
         },
     }, loteController.atualizarStatus as any);
     app.delete("/lotes/:id", { ...guard, schema: { summary: "Inativa lote e seus equipamentos", params } }, loteController.inativar as any);
+    app.patch("/lotes/:id/ativar", { ...guard, schema: { summary: "Reativa lote e seus equipamentos se a organização estiver ativa", params } }, loteController.ativar as any);
 }

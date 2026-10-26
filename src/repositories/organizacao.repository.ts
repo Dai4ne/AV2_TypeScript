@@ -26,5 +26,13 @@ export const organizacaoRepository = {
             return tx.organizacao.update({ where: { id }, data: { ativo: false } });
         });
     },
-    ativar(id: string) { return prisma.organizacao.update({ where: { id }, data: { ativo: true } }); },
+    async ativarEmCadeia(id: string) {
+        // Reativa a organização e seus lotes e equipamentos na mesma transação.
+        return prisma.$transaction(async (tx) => {
+            await tx.organizacao.update({ where: { id }, data: { ativo: true } });
+            await tx.lote.updateMany({ where: { organizacaoId: id }, data: { ativo: true } });
+            await tx.equipamento.updateMany({ where: { lote: { organizacaoId: id } }, data: { ativo: true } });
+            return tx.organizacao.findUniqueOrThrow({ where: { id } });
+        });
+    },
 };

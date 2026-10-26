@@ -21,7 +21,7 @@ export async function registrarRotasEquipamento(app: FastifyInstance): Promise<v
     app.get("/equipamentos", { ...gestor, schema: { summary: "Lista equipamentos ativos", tags: ["equipamentos"] } }, equipamentoController.listar as any);
     app.get("/equipamentos/:id", { ...leitor, schema: { summary: "Busca equipamento e histórico", params, tags: ["equipamentos"] } }, equipamentoController.buscar as any);
     app.post("/equipamentos", { ...gestor, schema: { summary: "Cadastra equipamento; ID também é código de barras", body: criar, tags: ["equipamentos"] } }, equipamentoController.criar as any);
-    app.put("/equipamentos/:id", { ...gestor, schema: { summary: "Atualiza dados do equipamento", params, body: atualizar, tags: ["equipamentos"] } }, equipamentoController.atualizar as any);
+    app.put("/equipamentos/:id", { ...gestor, schema: { summary: "Atualiza dados e registra no histórico alterações do estado físico", params, body: atualizar, tags: ["equipamentos"] } }, equipamentoController.atualizar as any);
     app.patch("/equipamentos/:id/status", {
         ...gestor,
         schema: { summary: "Atualiza status, registra movimentação e recalcula o lote", params, body: {

@@ -37,10 +37,10 @@ Abra <http://localhost:3000/docs>. Faça `POST /auth/login` com `ADMIN_USER` e `
 ## Operações disponíveis
 
 - **Usuários:** cadastrar, consultar, listar todos os ativos ou filtrar por papel (`GET /usuarios/papel/{papel}`), alterar nome/papel, inativar e reativar. A própria pessoa pode trocar a senha; administrador pode redefinir senhas e gerenciar contas.
-- **Organizações:** cadastrar, consultar, listar, atualizar CNPJ e dados, inativar e reativar. E-mails são normalizados e não podem ser repetidos. A inativação também inativa lotes e equipamentos vinculados.
+- **Organizações:** cadastrar, consultar, listar, atualizar CNPJ e dados, inativar e reativar. E-mails são normalizados e não podem ser repetidos. Inativar ou reativar uma organização também inativa ou reativa seus lotes e equipamentos vinculados.
 - **Contratos:** cadastrar, consultar, listar, atualizar e excluir definitivamente. Cada organização pode ter no máximo um contrato.
-- **Lotes:** cadastrar, consultar com equipamentos, listar, atualizar, inativar e alterar manualmente o status. Só é permitido cadastrar lote para organização ativa com contrato vigente. Inativar lote também inativa os equipamentos.
-- **Equipamentos:** cadastrar, consultar, listar, atualizar, alterar status e excluir definitivamente. O ID do equipamento também é seu código de barras. A exclusão definitiva remove suas movimentações vinculadas.
+- **Lotes:** cadastrar, consultar com equipamentos, listar, atualizar, inativar, reativar e alterar manualmente o status. Só é permitido cadastrar lote para organização ativa com contrato vigente. Inativar ou reativar lote também inativa ou reativa seus equipamentos; para reativar o lote, a organização precisa estar ativa.
+- **Equipamentos:** cadastrar, consultar, listar, atualizar, alterar status e excluir definitivamente. O ID do equipamento também é seu código de barras. A exclusão definitiva remove suas movimentações vinculadas. Alterações do estado físico ficam registradas na observação do histórico, incluindo a justificativa quando informada.
 - **Movimentações:** registrar e consultar no histórico do equipamento. O histórico é somente de acréscimo para preservar os registros.
 
 ## Relatórios

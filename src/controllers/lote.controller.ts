@@ -27,6 +27,7 @@ export const loteController = {
         return responder(reply, () => loteService.atualizarStatus(request.params.id, request.body.status));
     },
     async inativar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => loteService.inativar(request.params.id)); },
+    async ativar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => loteService.ativar(request.params.id)); },
 };
 
 async function responder(reply: FastifyReply, acao: () => Promise<unknown>, status = 200) {
