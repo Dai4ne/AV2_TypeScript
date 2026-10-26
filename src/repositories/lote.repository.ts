@@ -5,6 +5,12 @@ export const loteRepository = {
     listar() {
         return prisma.lote.findMany({ where: { ativo: true }, orderBy: { dataEntrada: "desc" } });
     },
+    listarPorPeriodo(inicio: Date, fim: Date) {
+        return prisma.lote.findMany({
+            where: { ativo: true, dataEntrada: { gte: inicio, lte: fim } },
+            orderBy: { dataEntrada: "desc" },
+        });
+    },
     buscarPorId(id: string) {
         return prisma.lote.findUnique({ where: { id }, include: { equipamentos: { where: { ativo: true }, orderBy: { posicaoNoLote: "asc" } } } });
     },

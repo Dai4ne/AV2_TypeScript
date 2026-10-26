@@ -14,6 +14,16 @@ export async function registrarRotasLote(app: FastifyInstance): Promise<void> {
     const guard = { preHandler: [autenticar, exigirPapeis("GESTOR_ALMOXARIFADO")] };
 
     app.get("/lotes", { ...guard, schema: { summary: "Lista lotes ativos" } }, loteController.listar as any);
+    app.get("/lotes/periodo", {
+        ...guard,
+        schema: {
+            summary: "Lista lotes ativos recebidos no período",
+            querystring: {
+                type: "object", additionalProperties: false, required: ["dataInicio", "dataFim"],
+                properties: { dataInicio: { type: "string", format: "date-time" }, dataFim: { type: "string", format: "date-time" } },
+            },
+        },
+    }, loteController.listarPorPeriodo as any);
     app.get("/lotes/:id", { ...guard, schema: { summary: "Busca lote e equipamentos ativos", params } }, loteController.buscar as any);
     app.post("/lotes", { ...guard, schema: { summary: "Cadastra lote para organização com contrato vigente", body: criar } }, loteController.criar as any);
     app.put("/lotes/:id", { ...guard, schema: { summary: "Atualiza os dados do lote", params, body: atualizar } }, loteController.atualizar as any);

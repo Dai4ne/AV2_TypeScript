@@ -10,6 +10,12 @@ type EdicaoLote = Omit<DadosLote, "id">;
 // Valida as regras de organização, contrato e datas dos lotes.
 export const loteService = {
     listar() { return loteRepository.listar(); },
+    listarPorPeriodo(inicio: Date, fim: Date) {
+        if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime()) || inicio > fim) {
+            throw new ErroLote(400, "Informe um período válido, com data inicial anterior ou igual à final.");
+        }
+        return loteRepository.listarPorPeriodo(inicio, fim);
+    },
     async buscar(id: string) {
         const lote = await loteRepository.buscarPorId(id);
         if (!lote || !lote.ativo) throw new ErroLote(404, "Lote não encontrado ou inativo.");

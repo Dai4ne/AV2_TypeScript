@@ -43,6 +43,16 @@ Abra <http://localhost:3000/docs>. Faça `POST /auth/login` com `ADMIN_USER` e `
 - **Equipamentos:** cadastrar, consultar, listar, atualizar, alterar status e excluir definitivamente. O ID do equipamento também é seu código de barras. A exclusão definitiva remove suas movimentações vinculadas.
 - **Movimentações:** registrar e consultar no histórico do equipamento. O histórico é somente de acréscimo para preservar os registros.
 
+## Relatórios
+
+- `GET /relatorios/organizacoes/{organizacaoId}?dataInicio=...&dataFim=...`: quantidade e lista de lotes da organização no período.
+- `GET /relatorios/status?status=...`: quantidade de equipamentos ativos em um status de rastreamento.
+- `GET /relatorios/financeiro?dataInicio=...&dataFim=...`: contratos vigentes que se sobrepõem ao período e soma de seus valores mensais.
+- `GET /lotes/periodo?dataInicio=...&dataFim=...`: lotes ativos recebidos no período.
+- `GET /lotes/{id}/relatorio-triagem`: quantidade de equipamentos ativos, peso total e distribuição por status.
+
+As consultas de relatório aceitam os papéis de operador de cadastro, gestor de almoxarifado e auditor; o administrador também tem acesso.
+
 As movimentações mantêm o instante correto no banco e as respostas também incluem `dataHoraBrasilia`, formatada para o fuso `America/Sao_Paulo`.
 
 O papel `ADMINISTRADOR` tem acesso a todas as rotas. Os outros papéis seguem as permissões da AV1: operador de cadastro gerencia organizações/contratos; gestor de almoxarifado gerencia lotes/equipamentos; auditor consulta rastreamento e movimentações.

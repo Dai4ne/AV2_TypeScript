@@ -11,6 +11,7 @@ import { registrarRotasContrato } from "./routes/contratos.js";
 import { registrarRotasEquipamento } from "./routes/equipamentos.js";
 import { registrarRotasUsuario } from "./routes/usuarios.js";
 import { registrarRotasAuth } from "./routes/auth.js";
+import { registrarRotasRelatorio } from "./routes/relatorios.js";
 
 // Monta o servidor, plugins e todos os grupos de rotas.
 export async function criarAplicacao() {
@@ -26,6 +27,7 @@ export async function criarAplicacao() {
     await app.register(fastifySwaggerUi, { routePrefix: "/docs" });
     await registrarRotaSaude(app);
     await registrarRotasAuth(app);
+    await registrarRotasRelatorio(app);
     await registrarRotasUsuario(app);
     await registrarRotasOrganizacao(app);
     await registrarRotasContrato(app);
