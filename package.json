@@ -13,8 +13,7 @@
     "db:format": "prisma format",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
-    "test:api": "tsx --test tests/api.integration.test.ts"
+    "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@fastify/jwt": "^10.2.5",

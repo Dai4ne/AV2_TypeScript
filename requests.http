@@ -1,0 +1,345 @@
+@baseUrl = http://localhost:3000
+@adminUsuario = admin
+@adminSenha = TROQUE_PELA_SENHA_CONFIGURADA_NO_ENV
+
+### 0 - Verificar se a API e o banco estão funcionando
+GET {{baseUrl}}/health
+
+
+### 1 - Entrar como administrador
+# No VS Code, instale a extensão REST Client e clique em "Send Request" acima da chamada.
+# Atualize adminUsuario/adminSenha com os valores configurados para o administrador inicial.
+# As próximas chamadas usam o token devolvido aqui.
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "{{adminUsuario}}",
+  "senha": "{{adminSenha}}"
+}
+
+
+### 2 - Listar organizações disponíveis
+GET {{baseUrl}}/organizacoes
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 3 - Cadastrar uma organização para demonstração
+# Use um e-mail e CNPJ que ainda não estejam cadastrados no banco.
+# Se executar de novo, troque o sufixo PROF-001 nos IDs e nos dados únicos.
+# @name criarOrganizacao
+POST {{baseUrl}}/organizacoes
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "id": "PROF-ORG-001",
+  "razaoSocial": "Organização de Demonstração",
+  "cnpj": "12345678000195",
+  "inscricaoEstadual": "ISENTO",
+  "enderecoCompleto": "Rua de Exemplo, 100",
+  "telefone": "11987654321",
+  "email": "prof-demo-001@example.test"
+}
+
+
+### 4 - Consultar a organização recém-cadastrada
+GET {{baseUrl}}/organizacoes/PROF-ORG-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 5 - Atualizar a organização (a versão atual vem da resposta da criação)
+# A versão é um número de controle. Usar a versão recebida evita sobrescrever alteração recente.
+# @name atualizarOrganizacao
+PUT {{baseUrl}}/organizacoes/PROF-ORG-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "versao": {{criarOrganizacao.response.body.$.versao}},
+  "razaoSocial": "Organização de Demonstração Atualizada",
+  "cnpj": "12345678000195",
+  "inscricaoEstadual": "ISENTO",
+  "enderecoCompleto": "Rua de Exemplo, 101",
+  "telefone": "11987654321",
+  "email": "prof-demo-001@example.test"
+}
+
+
+### 6 - Criar contrato vigente para permitir cadastrar um lote
+# @name criarContrato
+POST {{baseUrl}}/contratos
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "organizacaoId": "PROF-ORG-001",
+  "dataAssinatura": "2026-01-01T12:00:00.000Z",
+  "dataVencimento": "2099-12-31T12:00:00.000Z",
+  "clausulas": ["Contrato de demonstração acadêmica"],
+  "valorMensal": 1500,
+  "renovacaoAutomatica": false
+}
+
+
+### 7 - Listar contratos
+GET {{baseUrl}}/contratos
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 7b - Atualizar o contrato
+# @name atualizarContrato
+PUT {{baseUrl}}/contratos/{{criarContrato.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "versao": {{criarContrato.response.body.$.versao}},
+  "dataAssinatura": "2026-01-01T12:00:00.000Z",
+  "dataVencimento": "2099-12-31T12:00:00.000Z",
+  "clausulas": ["Contrato de demonstração acadêmica atualizado"],
+  "valorMensal": 1600,
+  "renovacaoAutomatica": false
+}
+
+### 8 - Cadastrar lote (o status inicial deve ser RECEBIDO)
+# @name criarLote
+POST {{baseUrl}}/lotes
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "id": "PROF-LOTE-001",
+  "dataEntrada": "{{$datetime iso8601}}",
+  "organizacaoId": "PROF-ORG-001",
+  "notaFiscal": "PROF-NF-001",
+  "transportadora": "Transportadora de Demonstração",
+  "observacoes": "Criado pelo roteiro requests.http"
+}
+
+
+### 9 - Consultar o lote e conferir status/versao
+# @name consultarLote
+GET {{baseUrl}}/lotes/PROF-LOTE-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 9b - Atualizar os dados do lote
+# @name atualizarLote
+PUT {{baseUrl}}/lotes/PROF-LOTE-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "versao": {{consultarLote.response.body.$.versao}},
+  "dataEntrada": "{{$datetime iso8601}}",
+  "organizacaoId": "PROF-ORG-001",
+  "notaFiscal": "PROF-NF-001",
+  "transportadora": "Transportadora de Demonstração Atualizada",
+  "observacoes": "Lote atualizado pelo roteiro requests.http"
+}
+
+### 10 - Cadastrar equipamento no lote
+# A atualização acima devolve a versão atualizada do lote.
+# @name criarEquipamento
+POST {{baseUrl}}/equipamentos
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "id": "PROF-EQ-001",
+  "loteId": "PROF-LOTE-001",
+  "versaoLote": {{atualizarLote.response.body.$.versao}},
+  "tipo": "NOTEBOOK",
+  "marca": "Exemplo",
+  "modelo": "Modelo Acadêmico",
+  "anoFabricacao": 2022,
+  "estadoFisico": "BOM_ESTADO",
+  "pesoQuilogramas": 2.5
+}
+
+
+### 11 - Listar e consultar equipamentos
+GET {{baseUrl}}/equipamentos
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 11b - Consultar um equipamento específico
+GET {{baseUrl}}/equipamentos/PROF-EQ-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 12 - Mudar status do equipamento e registrar movimentação
+# Use a versão do equipamento devolvida pela criação.
+# @name atualizarStatusEquipamento
+PATCH {{baseUrl}}/equipamentos/PROF-EQ-001/status
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "versao": {{criarEquipamento.response.body.$.versao}},
+  "status": "EM_TRIAGEM"
+}
+
+
+### 12b - Tentar piorar o estado físico em várias categorias sem justificativa (deve responder 400)
+# O equipamento começa em BOM_ESTADO. Esta tentativa não deve salvar a alteração.
+PUT {{baseUrl}}/equipamentos/PROF-EQ-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "versao": {{atualizarStatusEquipamento.response.body.$.versao}},
+  "tipo": "NOTEBOOK",
+  "marca": "Exemplo",
+  "modelo": "Modelo Acadêmico",
+  "anoFabricacao": 2022,
+  "estadoFisico": "DANIFICADO_GRAVE",
+  "pesoQuilogramas": 2.5
+}
+
+
+### 12c - Repetir a alteração com justificativa (deve ser aceita)
+# @name atualizarEquipamento
+PUT {{baseUrl}}/equipamentos/PROF-EQ-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "versao": {{atualizarStatusEquipamento.response.body.$.versao}},
+  "tipo": "NOTEBOOK",
+  "marca": "Exemplo",
+  "modelo": "Modelo Acadêmico",
+  "anoFabricacao": 2022,
+  "estadoFisico": "DANIFICADO_GRAVE",
+  "pesoQuilogramas": 2.5,
+  "justificativa": "Dano constatado durante a triagem de demonstração."
+}
+
+
+### 12d - Mudar o status manual do lote
+# A inclusão e atualização do equipamento mudam a versão do lote; consulte-a novamente.
+# @name consultarLoteAtual
+GET {{baseUrl}}/lotes/PROF-LOTE-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 12e - Atualizar o status do lote
+# @name atualizarStatusLote
+PATCH {{baseUrl}}/lotes/PROF-LOTE-001/status
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "versao": {{consultarLoteAtual.response.body.$.versao}},
+  "status": "EM_TRIAGEM"
+}
+
+### 13 - Consultar movimentações do equipamento
+GET {{baseUrl}}/equipamentos/PROF-EQ-001/movimentacoes
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 14 - Consultar relatório de triagem do lote
+GET {{baseUrl}}/lotes/PROF-LOTE-001/relatorio-triagem
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 15 - Consultar relatório de equipamentos por status
+GET {{baseUrl}}/relatorios/status?status=EM_TRIAGEM
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 16 - Consultar relatório de lotes da organização no período
+GET {{baseUrl}}/relatorios/organizacoes/PROF-ORG-001?dataInicio=2026-01-01T00:00:00.000Z&dataFim=2099-12-31T23:59:59.000Z
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 17 - Consultar relatório financeiro
+GET {{baseUrl}}/relatorios/financeiro?dataInicio=2026-01-01T00:00:00.000Z&dataFim=2099-12-31T23:59:59.000Z
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 18 - Testar validação: tentar criar organização com e-mail duplicado (deve falhar)
+POST {{baseUrl}}/organizacoes
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "id": "PROF-ORG-DUPLICADA",
+  "razaoSocial": "Organização com e-mail repetido",
+  "cnpj": "98765432000198",
+  "inscricaoEstadual": "ISENTO",
+  "enderecoCompleto": "Rua de Exemplo, 200",
+  "telefone": "11987654321",
+  "email": "prof-demo-001@example.test"
+}
+
+
+### 19 - Criar usuário de teste como administrador
+# Troque o nome caso já exista; use a senha de demonstração apenas para este ambiente local.
+# @name criarOperador
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "usuario": "prof_operador_001",
+  "senha": "Senha-Demo-001!",
+  "papel": "OPERADOR_CADASTRO"
+}
+
+
+### 19b - Listar usuários pelo papel
+GET {{baseUrl}}/usuarios/papel/OPERADOR_CADASTRO
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 20 - Entrar como operador de cadastro
+# @name loginOperador
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "prof_operador_001",
+  "senha": "Senha-Demo-001!"
+}
+
+
+### 21 - Testar permissão: operador não pode listar equipamentos (deve responder 403)
+GET {{baseUrl}}/equipamentos
+Authorization: Bearer {{loginOperador.response.body.$.token}}
+
+
+### 22 - (Opcional) Excluir definitivamente o equipamento e seu histórico
+# Execute somente depois de terminar a demonstração; consulte o equipamento para pegar a versão atual.
+DELETE {{baseUrl}}/equipamentos/PROF-EQ-001?versao={{atualizarEquipamento.response.body.$.versao}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 22b - Consultar a nova versão do lote após excluir o equipamento
+# Excluir um equipamento também atualiza a versão do lote relacionado.
+# @name consultarLoteParaInativar
+GET {{baseUrl}}/lotes/PROF-LOTE-001
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 23 - (Opcional) Excluir definitivamente o contrato
+DELETE {{baseUrl}}/contratos/{{atualizarContrato.response.body.$.id}}?versao={{atualizarContrato.response.body.$.versao}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 24 - (Opcional) Inativar lote e equipamento(s)
+DELETE {{baseUrl}}/lotes/PROF-LOTE-001?versao={{consultarLoteParaInativar.response.body.$.versao}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 25 - (Opcional) Inativar organização e seus lotes/equipamentos
+DELETE {{baseUrl}}/organizacoes/PROF-ORG-001?versao={{atualizarOrganizacao.response.body.$.versao}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+### 26 - (Opcional) Inativar o usuário de demonstração
+DELETE {{baseUrl}}/usuarios/{{criarOperador.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
