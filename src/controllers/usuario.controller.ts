@@ -10,6 +10,9 @@ type PasswordBody = { senha: string; senhaAtual?: string };
 // Converte as requisições HTTP em operações de usuário.
 export const usuarioController = {
     async listar(_request: FastifyRequest, reply: FastifyReply) { return reply.send(await usuarioService.listar()); },
+    async listarPorPapel(request: FastifyRequest<{ Params: { papel: PapelUsuario } }>, reply: FastifyReply) {
+        return reply.send(await usuarioService.listarPorPapel(request.params.papel));
+    },
     async buscar(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) { return responder(reply, () => usuarioService.buscar(request.params.id)); },
     async criar(request: FastifyRequest<{ Body: CreateBody }>, reply: FastifyReply) { return responder(reply, () => usuarioService.criar(request.body.usuario, request.body.senha, request.body.papel), 201); },
     async atualizar(request: FastifyRequest<{ Params: Params; Body: UpdateBody }>, reply: FastifyReply) { return responder(reply, () => usuarioService.atualizar(request.params.id, request.body.usuario, request.body.papel)); },

@@ -6,6 +6,9 @@ const camposPublicos = { id: true, usuario: true, ultimoAcesso: true, papel: tru
 // Mantém consultas e alterações de usuário em um único local.
 export const usuarioRepository = {
     listar() { return prisma.usuario.findMany({ where: { ativo: true }, select: camposPublicos, orderBy: { usuario: "asc" } }); },
+    listarPorPapel(papel: PapelUsuario) {
+        return prisma.usuario.findMany({ where: { ativo: true, papel }, select: camposPublicos, orderBy: { usuario: "asc" } });
+    },
     buscarPorId(id: string) { return prisma.usuario.findUnique({ where: { id } }); },
     buscarPorNome(usuario: string) { return prisma.usuario.findUnique({ where: { usuario } }); },
     criar(dados: { usuario: string; hashSenha: string; salt: string; papel: PapelUsuario }) {

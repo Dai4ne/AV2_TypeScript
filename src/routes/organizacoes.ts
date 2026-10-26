@@ -8,7 +8,7 @@ export async function registrarRotasOrganizacao(app: FastifyInstance): Promise<v
     const campos = {
         razaoSocial: { type: "string", minLength: 1 }, cnpj: { type: "string", minLength: 14, maxLength: 18 },
         inscricaoEstadual: { type: "string", minLength: 1 }, enderecoCompleto: { type: "string", minLength: 1 },
-        telefone: { type: "string", minLength: 1 }, email: { type: "string", minLength: 3 },
+        telefone: { type: "string", minLength: 1 }, email: { type: "string", format: "email" },
     } as const;
     const criar = { type: "object", additionalProperties: false, required: ["id", ...Object.keys(campos)], properties: { id: { type: "string", minLength: 1 }, ...campos } } as const;
     const editar = { type: "object", additionalProperties: false, required: Object.keys(campos), properties: campos } as const;

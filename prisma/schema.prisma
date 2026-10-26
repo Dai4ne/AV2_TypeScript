@@ -72,7 +72,7 @@ model Organizacao {
   inscricaoEstadual String
   enderecoCompleto  String
   telefone          String
-  email             String
+  email             String    @unique
   dataCadastro      DateTime  @default(now())
   ativo             Boolean   @default(true)
   contrato          Contrato?
@@ -129,7 +129,7 @@ model Equipamento {
 model Movimentacao {
   id            String      @id @default(uuid())
   equipamentoId String
-  dataHora      DateTime    @default(now())
+  dataHora      DateTime    @default(now()) @db.Timestamptz(3)
   origem        String
   destino       String
   responsavel   String

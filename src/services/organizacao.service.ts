@@ -16,21 +16,25 @@ export const organizacaoService = {
         return organizacao;
     },
     async criar(dados: { id: string; razaoSocial: string; cnpj: string; inscricaoEstadual: string; enderecoCompleto: string; telefone: string; email: string }) {
+        dados.email = validarEmail(dados.email);
+        if (await organizacaoRepository.buscarPorEmail(dados.email)) throw new ErroOrganizacao(409, "Esse e-mail já está cadastrado em outra organização.");
         if (!validarCnpj(dados.cnpj)) throw new ErroOrganizacao(400, "CNPJ inválido.");
         dados.cnpj = dados.cnpj.replace(/\D/g, "");
         try { return await organizacaoRepository.criar(dados); }
         catch (erro) {
-            if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") throw new ErroOrganizacao(409, "Já existe organização com esse identificador ou CNPJ.");
+            if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") throw new ErroOrganizacao(409, "Já existe organização com esse identificador, CNPJ ou e-mail.");
             throw erro;
         }
     },
     async atualizar(id: string, dados: { razaoSocial: string; cnpj: string; inscricaoEstadual: string; enderecoCompleto: string; telefone: string; email: string }) {
         await this.buscar(id);
+        dados.email = validarEmail(dados.email);
+        if (await organizacaoRepository.buscarPorEmail(dados.email, id)) throw new ErroOrganizacao(409, "Esse e-mail já está cadastrado em outra organização.");
         if (!validarCnpj(dados.cnpj)) throw new ErroOrganizacao(400, "CNPJ inválido.");
         dados.cnpj = dados.cnpj.replace(/\D/g, "");
         try { return await organizacaoRepository.atualizar(id, dados); }
         catch (erro) {
-            if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") throw new ErroOrganizacao(409, "Esse CNPJ já está cadastrado.");
+            if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") throw new ErroOrganizacao(409, "Esse CNPJ ou e-mail já está cadastrado.");
             throw erro;
         }
     },
@@ -41,3 +45,12 @@ export const organizacaoService = {
         return organizacaoRepository.ativar(id);
     },
 };
+
+// Remove espaços e padroniza o e-mail antes de salvar.
+function validarEmail(email: string): string {
+    const normalizado = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizado)) {
+        throw new ErroOrganizacao(400, "E-mail inválido.");
+    }
+    return normalizado;
+}

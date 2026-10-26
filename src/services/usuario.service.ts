@@ -11,6 +11,7 @@ export class ErroUsuario extends Error {
 // Aplica regras de contas, senha, papéis e inativação.
 export const usuarioService = {
     listar() { return usuarioRepository.listar(); },
+    listarPorPapel(papel: PapelUsuario) { return usuarioRepository.listarPorPapel(papel); },
     async buscar(id: string) {
         const usuario = await usuarioRepository.buscarPorId(id);
         if (!usuario || !usuario.ativo) throw new ErroUsuario(404, "Usuário não encontrado ou inativo.");

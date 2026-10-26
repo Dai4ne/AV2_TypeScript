@@ -4,6 +4,14 @@ import { prisma } from "../database/prisma.js";
 export const organizacaoRepository = {
     listar() { return prisma.organizacao.findMany({ where: { ativo: true }, orderBy: { razaoSocial: "asc" } }); },
     buscarPorId(id: string) { return prisma.organizacao.findUnique({ where: { id } }); },
+    buscarPorEmail(email: string, ignorarId?: string) {
+        return prisma.organizacao.findFirst({
+            where: {
+                email: { equals: email, mode: "insensitive" },
+                ...(ignorarId ? { id: { not: ignorarId } } : {}),
+            },
+        });
+    },
     criar(dados: { id: string; razaoSocial: string; cnpj: string; inscricaoEstadual: string; enderecoCompleto: string; telefone: string; email: string }) {
         return prisma.organizacao.create({ data: dados });
     },

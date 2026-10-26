@@ -15,6 +15,10 @@ export async function registrarRotasUsuario(app: FastifyInstance): Promise<void>
     const admin = { preHandler: [autenticar, exigirPapeis("ADMINISTRADOR")] };
 
     app.get("/usuarios", { ...admin, schema: { summary: "Lista usuários ativos" } }, usuarioController.listar as any);
+    app.get("/usuarios/papel/:papel", { ...admin, schema: {
+        summary: "Lista usuários ativos com o papel informado",
+        params: { type: "object", required: ["papel"], properties: { papel: { type: "string", enum: papeis } } },
+    } }, usuarioController.listarPorPapel as any);
     app.get("/usuarios/:id", { ...admin, schema: { summary: "Busca usuário", params } }, usuarioController.buscar as any);
     app.post("/usuarios", { ...admin, schema: { summary: "Cadastra usuário", body: cadastro } }, usuarioController.criar as any);
     app.put("/usuarios/:id", { ...admin, schema: { summary: "Atualiza nome e papel", params, body: atualizacao } }, usuarioController.atualizar as any);
