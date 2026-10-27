@@ -43,7 +43,7 @@ export const contratoController = {
     },
 };
 
-// Padroniza respostas de sucesso e erros conhecidos.
+// PadronizA respostas de sucesso e erros conhecidos.
 async function responder(reply: FastifyReply, acao: () => Promise<unknown>, sucesso = 200) {
     try {
         return reply.code(sucesso).send(await acao());

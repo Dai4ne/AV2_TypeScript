@@ -44,7 +44,7 @@ export const loteRepository = {
         });
     },
     async ativarEmCadeia(id: string, versao: number) {
-        // Reativa o lote e seus equipamentos na mesma transação.
+        // Reativa o lote e seus equipamentos Na mesma transação.
         return prisma.$transaction(async (tx) => {
             const resultado = await tx.lote.updateMany({ where: { id, ativo: false, versao }, data: { ativo: true, versao: { increment: 1 } } });
             if (!resultado.count) return null;

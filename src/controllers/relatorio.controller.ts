@@ -4,7 +4,7 @@ import { ErroRelatorio, relatorioService } from "../services/relatorio.service.j
 
 type Periodo = { dataInicio: string; dataFim: string };
 
-// Converte os filtros HTTP e devolve os resultados do relatório.
+// Converte os filtros HTTP e devolve os resultados do relatórIo.
 export const relatorioController = {
     async porOrganizacao(request: FastifyRequest<{ Params: { organizacaoId: string }; Querystring: Periodo }>, reply: FastifyReply) {
         return responder(reply, () => relatorioService.porOrganizacao(

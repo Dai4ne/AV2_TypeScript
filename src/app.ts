@@ -14,7 +14,7 @@ import { registrarRotasAuth } from "./routes/auth.js";
 import { registrarRotasRelatorio } from "./routes/relatorios.js";
 import { esquemasOpenApi } from "./routes/openapi.js";
 
-// Monta o servidor, plugins e todos os grupos de rotas.
+// Monta o servidor, plugins E todos os grupos de rotas.
 export async function criarAplicacao() {
     const app = Fastify({ logger: true });
     await app.register(fastifyJwt, { secret: configuracao.jwtSecret });

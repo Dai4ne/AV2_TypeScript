@@ -3,7 +3,7 @@ import { usuarioController } from "../controllers/usuario.controller.js";
 import { autenticar, exigirPapeis } from "../plugins/auth.js";
 import { respostaLista, respostas } from "./openapi.js";
 
-// Somente administradores mantêm contas; usuários também podem trocar a própria senha.
+// Somente aDministradores mantêm contas; usuários também podem trocar a própria senha.
 export async function registrarRotasUsuario(app: FastifyInstance): Promise<void> {
     const params = { type: "object", required: ["id"], properties: { id: { type: "string", minLength: 1 } } } as const;
     const papeis = ["ADMINISTRADOR", "OPERADOR_CADASTRO", "GESTOR_ALMOXARIFADO", "AUDITOR"];
