@@ -1,12 +1,12 @@
-# GreenCode — AV2
+# <div align='center'> 🌿GreenCode — AV2 </div>
 
-API REST da continuação do GreenCode da AV1, feita com TypeScript, Fastify, Prisma e PostgreSQL.
+API REST da continuação do GreenCode da <a href='https://github.com/Dai4ne/AV1_TypeScript'> AV1</a>, feita com TypeScript, Fastify, Prisma e PostgreSQL.
 
 O sistema controla logística reversa de eletrônicos: usuários com papéis, organizações, contratos, lotes, equipamentos, movimentações e relatórios. A documentação interativa fica em `/docs` (Swagger UI). O roteiro de requisições manuais está em `tests/requests.http`.
 
 Os dados da AV1 **não** são importados. A AV2 começa com registros fictícios criados pelo seed (`DEMO-`).
 
-## Sumário
+## 📃Sumário
 
 1. [Ferramentas necessárias](#ferramentas-necessárias)
 2. [Instalar as ferramentas](#instalar-as-ferramentas)
@@ -21,7 +21,7 @@ Os dados da AV1 **não** são importados. A AV2 começa com registros fictícios
 11. [Comandos úteis](#comandos-úteis)
 12. [Problemas comuns](#problemas-comuns)
 
-## Ferramentas necessárias
+## 🔧Ferramentas necessárias
 
 | Ferramenta | Versão mínima | Para que serve |
 | --- | --- | --- |
@@ -36,9 +36,11 @@ Navegador qualquer (Chrome, Firefox, Edge) para abrir o Swagger em `http://local
 
 Não é obrigatório Docker. Prisma Studio (`npm run db:studio`) é opcional e abre uma tela das tabelas.
 
-## Instalar as ferramentas
+<Br>
 
-### Windows
+## 🔧Instalar as ferramentas
+
+### 🪟Windows
 
 1. Instale o [Node.js LTS](https://nodejs.org/). No instalador, deixe marcada a opção de adicionar ao `PATH`.
 2. Instale o [PostgreSQL](https://www.postgresql.org/download/windows/). Anote a senha do usuário `postgres` e a porta (padrão `5432`).
@@ -52,7 +54,7 @@ Não é obrigatório Docker. Prisma Studio (`npm run db:studio`) é opcional e a
 
    Se `psql` não for encontrado, use o **SQL Shell (psql)** do menu Iniciar ou adicione a pasta `bin` do PostgreSQL ao `PATH` (exemplo: `C:\Program Files\PostgreSQL\16\bin`).
 
-### Linux (Ubuntu/Debian)
+### 🐧Linux (Ubuntu/Debian)
 
        sudo apt update
        sudo apt install -y git curl ca-certificates
@@ -65,7 +67,9 @@ Não é obrigatório Docker. Prisma Studio (`npm run db:studio`) é opcional e a
 
 Em outras distribuições, instale Node.js 18.18+ e PostgreSQL 14+ pelos gerenciadores da distro. No Linux, o motor do Prisma também precisa das bibliotecas OpenSSL do sistema (em Ubuntu costumam vir com `ca-certificates` / `libssl`).
 
-## Preparar o PostgreSQL
+<br>
+
+## 🐘Preparar o PostgreSQL
 
 1. Inicie o serviço, se ainda não estiver em execução.
 
@@ -102,7 +106,9 @@ Para conferir se o banco existe:
 
        psql -U postgres -h localhost -c "\l"
 
-## Configurar e subir o projeto
+<br>
+
+## 🧱Configurar e subir o projeto
 
 Faça estes passos na pasta raiz do repositório (onde está o `package.json`).
 
@@ -176,7 +182,9 @@ Para produção local, depois do `npm run dev` funcionar:
 
 `npm start` executa o JavaScript gerado em `dist/` e **não** recarrega sozinho ao editar o código.
 
-## Rodar no Linux
+<br>
+
+## 🐧Rodar no Linux
 
 Os passos são os mesmos da seção anterior. Pontos específicos:
 
@@ -186,7 +194,9 @@ Os passos são os mesmos da seção anterior. Pontos específicos:
 - Caminhos e maiúsculas/minúsculas importam (`tests/requests.http`, não `Tests/Requests.HTTP`).
 - Se o Prisma falhar ao baixar o motor nativo, instale as libs SSL da distro e rode de novo `npm install` / `npx prisma generate`.
 
-## Usar o Swagger
+<br>
+
+## 📗Usar o Swagger
 
 Com a API no ar (`npm run dev`):
 
@@ -211,13 +221,22 @@ Com a API no ar (`npm run dev`):
 6. Escolha a rota, **Try it out**, preencha JSON/parâmetros e **Execute**. O painel mostra status, corpo e o `curl` equivalente.
 7. O token vale **30 minutos**. Se as rotas voltarem `401`, faça login de novo e atualize o Authorize.
 
-Papéis: o `ADMINISTRADOR` acessa todas as rotas protegidas. Operador de cadastro gerencia organizações e contratos. Gestor de almoxarifado gerencia lotes e equipamentos. Auditor consulta rastreamento, movimentações e relatórios. Relatórios também aceitam operador, gestor, auditor e administrador.
-
 No Swagger, ao atualizar, alterar status, inativar, reativar ou excluir, envie a `versao` atual (veja [Controle de concorrência](#controle-de-concorrência-versao)). No cadastro de equipamento, envie `versaoLote`.
-
 Para testar outro papel, faça login com essa conta (depois de criá-la como administrador) e substitua o token no Authorize.
 
-## Usar o `tests/requests.http`
+<br>
+
+## 👨‍💻Papéis
+- O `ADMINISTRADOR` acessa todas as rotas protegidas.
+- O `OPERADOR` de cadastro gerencia organizações e contratos.
+- O `GESTOR` de almoxarifado gerencia lotes e equipamentos.
+- O `AUDITOR` consulta rastreamento, movimentações e relatórios. 
+
+Os `RELATÓRIOS` também aceitam operador, gestor, auditor e administrador.
+
+<br>
+
+## 📋Usar o `tests/requests.http`
 
 O seed e o roteiro HTTP têm funções diferentes: o seed prepara o administrador e os exemplos `DEMO-`; o arquivo `tests/requests.http` envia chamadas à API. Os cadastros do roteiro usam IDs `HTTP-` e nomes `http_`, então não substituem nem se confundem com os `DEMO-`.
 
@@ -230,14 +249,14 @@ O seed e o roteiro HTTP têm funções diferentes: o seed prepara o administrado
 
        @url = http://localhost:3000
        @admin = admin
-       @senhaAdmin = 240707
+       @senhaAdmin = troque_por_sua_senha
 
    `@admin` e `@senhaAdmin` precisam ser iguais a `ADMIN_USER` e `ADMIN_PASSWORD` do `.env`. Se a porta no `.env` não for `3000`, ajuste `@url`.
-5. Cada bloco começa com `###`. Clique em **Send Request** acima do bloco (ou `Ctrl+Alt+R` / `Cmd+Alt+R` no atalho padrão).
+5. Cada bloco começa com `###`. Clique em **Send Request** acima do bloco.
 6. Envie **na ordem**. Vários pedidos reutilizam o token e IDs de respostas anteriores (`# @name loginAdmin`, `{{loginAdmin.response.body.$.token}}`, `{{criarOrg.response.body.$.versao}}`, etc.). Pular um sucesso quebra os seguintes.
 7. Os títulos indicam o status esperado (`sucesso 200`, `erro 401`, `erro 409`, …). Um dos erros de lote usa `DEMO-ORG-CONTRATO-EXPIRADO` e por isso depende do seed.
 
-Login **não** cria uma sessão global: cada pedido usa o `Authorization` escrito nele. Depois de `loginAdmin`, `loginOperador`, `loginGestor` e `loginAuditor`, os blocos seguintes já apontam para o token certo.
+Login **NÃO** cria uma sessão global: cada pedido usa o `Authorization` escrito nele. Depois de `loginAdmin`, `loginOperador`, `loginGestor` e `loginAuditor`, os blocos seguintes já apontam para o token certo.
 
 Um pedido de `GET /health` está marcado para erro `500`: ele só falha se o PostgreSQL estiver parado. Não pare o banco no meio do roteiro; use esse caso à parte, se quiser demonstrar a falha, e religue o PostgreSQL em seguida.
 
@@ -259,9 +278,9 @@ Os registros `HTTP-` permanecem no banco. Rodar o seed de novo **não** os apaga
 
 Como alternativa, altere os IDs (`HTTP-ORG-001`, …) e os nomes de usuário (`http_operador_001`, …) no arquivo antes de repetir, para não colidir com o que já existe.
 
-Há uma extensão equivalente no IntelliJ/WebStorm (HTTP Client) se você colar o mesmo arquivo; as variáveis `{{$datetime iso8601}}` e `{{nome.response.body.$.campo}}` são as do REST Client do VS Code.
+<br>
 
-## Operações disponíveis
+## 📖Operações disponíveis
 
 - **Usuários:** cadastrar, consultar, listar todos os ativos ou filtrar por papel (`GET /usuarios/papel/{papel}`), alterar nome/papel, inativar e reativar. A própria pessoa pode trocar a senha (envie `senhaAtual` e `senha`); administrador pode redefinir senhas (envie só `senha`) e gerenciar contas. Não é permitido rebaixar ou inativar o último administrador ativo. Senhas e hashes nunca voltam nas respostas.
 - **Organizações:** cadastrar, consultar, listar, atualizar CNPJ e dados, inativar e reativar. E-mails são normalizados (minúsculas) e não podem ser repetidos. Inativar ou reativar uma organização também inativa ou reativa seus lotes e equipamentos vinculados.
@@ -274,7 +293,9 @@ Há uma extensão equivalente no IntelliJ/WebStorm (HTTP Client) se você colar 
 
 O responsável altera manualmente `RECEBIDO`, `EM_TRIAGEM`, `ENCAMINHADO` e `FINALIZADO`. `TRIAGEM_CONCLUIDA` é atribuído automaticamente quando todos os equipamentos ativos do lote chegam a `BAIXA_DEFINITIVA`. Não é permitido definir `TRIAGEM_CONCLUIDA` na mão, nem alterar manualmente um lote já concluído dessa forma.
 
-## Relatórios
+<br>
+
+## 📝Relatórios
 
 Acesso: operador de cadastro, gestor de almoxarifado, auditor e administrador.
 
@@ -286,7 +307,9 @@ Acesso: operador de cadastro, gestor de almoxarifado, auditor e administrador.
 
 Datas no formato ISO-8601, por exemplo `2026-01-01T00:00:00.000Z`. Período invertido (`dataInicio` depois de `dataFim`) retorna `400`.
 
-## Controle de concorrência (`versao`)
+<br>
+
+## 🎚️Controle de concorrência (`versao`)
 
 Organizações, contratos, lotes e equipamentos têm o campo `versao`, iniciado em `1`. As consultas devolvem esse número. Ao atualizar, alterar status, inativar, reativar ou excluir, envie a versão recebida na consulta ou na resposta da operação anterior. Ao cadastrar equipamento, envie `versaoLote` com a versão atual do lote. Se outra requisição já alterou o registro, a API responde `409 Conflict`; consulte de novo e reaplique a mudança.
 
@@ -297,7 +320,9 @@ Organizações, contratos, lotes e equipamentos têm o campo `versao`, iniciado 
 
 Exemplo: se `GET /lotes/LOTE-01` retorna `"versao": 3`, envie `"versao": 3` no JSON do `PUT /lotes/LOTE-01`.
 
-## Comandos úteis
+<br>
+
+## 💻Comandos úteis
 
 | Comando | Função |
 | --- | --- |
@@ -314,7 +339,9 @@ Exemplo: se `GET /lotes/LOTE-01` retorna `"versao": 3`, envie `"versao": 3` no J
 | `npm run db:seed` | administrador inicial (se faltar) e dados `DEMO-` |
 | `npx prisma migrate reset` | **apaga** o banco apontado por `DATABASE_URL`, reaplica migrações |
 
-## Problemas comuns
+<br>
+
+## 🚨Problemas comuns
 
 | Sintoma | O que conferir |
 | --- | --- |
